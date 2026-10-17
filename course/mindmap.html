@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>判断推理 · 第三章 因果推理 · 思维导图</title>
+<style>
+:root{
+  --bg:#f6f5f2; --card:#ffffff; --line:#e4e2dc; --line2:#d3d1c7;
+  --tx:#2c2c2a; --tx2:#5f5e5a; --tx3:#888780; --mark:#fff3c4;
+  --c-gray:#5F5E5A; --cg-bg:#F1EFE8;
+  --c-green:#3B6D11; --c-green-bg:#EAF3DE;
+  --c-purple:#534AB7; --cu-bg:#EEEDFE;
+  --c-red:#A32D2D;  --cr-bg:#FCEBEB;
+  --c-amber:#854F0B; --ca-bg:#FAEEDA;
+  --c-blue:#185FA5;  --cb-bg:#E6F1FB;
+  --c-teal:#0F6E56;  --ct-bg:#E1F5EE;
+  --radius:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#1c1c1b; --card:#262625; --line:#3a3a38; --line2:#4a4a47;
+    --tx:#ececea; --tx2:#b4b2a9; --tx3:#888780; --mark:#5c4a12;
+    --c-gray:#D3D1C7; --cg-bg:#33332f;
+    --c-green:#C0DD97; --c-green-bg:#2a3318;
+    --c-purple:#CECBF6; --cu-bg:#2b2a45;
+    --c-red:#F7C1C1;  --cr-bg:#3a2323;
+    --c-amber:#FAC775; --ca-bg:#3a2e18;
+    --c-blue:#B5D4F4;  --cb-bg:#1e2f42;
+    --c-teal:#9FE1CB;  --ct-bg:#173630;
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--tx);
+  font-family:system-ui,-apple-system,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+  font-size:14px; line-height:1.65;
+}
+header{
+  position:sticky; top:0; z-index:20; background:var(--card);
+  border-bottom:1px solid var(--line); padding:12px 20px;
+}
+.hrow{display:flex; align-items:center; gap:14px; flex-wrap:wrap; max-width:1500px; margin:0 auto}
+h1{font-size:17px; font-weight:600; margin:0; letter-spacing:.2px}
+.hsub{font-size:12px; color:var(--tx3)}
+.spacer{flex:1}
+input[type=search]{
+  font:inherit; font-size:13px; padding:6px 11px; width:210px;
+  border:1px solid var(--line2); border-radius:8px; background:var(--bg); color:var(--tx);
+}
+input[type=search]:focus{outline:2px solid var(--c-blue); outline-offset:-1px}
+button{
+  font:inherit; font-size:12.5px; padding:6px 12px; cursor:pointer;
+  border:1px solid var(--line2); border-radius:8px; background:var(--card); color:var(--tx2);
+}
+button:hover{border-color:var(--c-blue); color:var(--c-blue)}
+.wrap{max-width:1500px; margin:0 auto; padding:22px 20px 80px}
+
+.legend{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px}
+.legend a{
+  font-size:12px; text-decoration:none; color:inherit; padding:4px 11px;
+  border-radius:999px; border:1px solid var(--line2); background:var(--card);
+}
+.legend a:hover{border-color:currentColor}
+.legend b{font-weight:600}
+
+.mind{display:flex; align-items:flex-start; gap:0}
+.rootcol{flex:0 0 210px; position:sticky; top:74px}
+.rootcard{
+  border:2px solid var(--tx2); border-radius:16px; padding:16px 16px 14px; background:var(--card);
+}
+.rootcard .rk{font-size:11px; letter-spacing:1.5px; color:var(--tx3); text-transform:uppercase}
+.rootcard .rt{font-size:19px; font-weight:600; margin:4px 0 8px}
+.rootcard .rd{font-size:12px; color:var(--tx2); line-height:1.6}
+.rootcard .rn{
+  margin-top:12px; padding-top:10px; border-top:1px dashed var(--line2);
+  font-size:12px; color:var(--tx2);
+}
+.rootcard .rn b{font-size:15px; color:var(--tx)}
+
+.groups{flex:1; min-width:0; border-left:2px solid var(--line2); padding-left:0}
+.grp{position:relative; padding:0 0 22px 30px}
+.grp::before{
+  content:""; position:absolute; left:0; top:26px; width:30px; height:2px; background:var(--line2);
+}
+.grp::after{
+  content:""; position:absolute; left:-7px; top:20px; width:12px; height:12px; border-radius:50%;
+  background:var(--card); border:2px solid var(--gc,var(--tx3));
+}
+.gcard{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  border-left:5px solid var(--gc,var(--tx3)); overflow:hidden;
+}
+.ghead{
+  display:flex; align-items:center; gap:10px; padding:13px 16px; cursor:pointer; user-select:none;
+  background:var(--gbg,transparent);
+}
+.ghead:hover{filter:brightness(.98)}
+.caret{
+  font-size:10px; color:var(--gc,var(--tx3)); transition:transform .15s; flex:0 0 auto;
+}
+.grp.closed .caret{transform:rotate(-90deg)}
+.gname{font-size:15px; font-weight:600; color:var(--gc,var(--tx))}
+.gtag{
+  font-size:11.5px; padding:1px 8px; border-radius:999px; border:1px solid var(--gc,var(--tx3));
+  color:var(--gc,var(--tx3)); white-space:nowrap;
+}
+.gcnt{margin-left:auto; font-size:12px; color:var(--tx3); white-space:nowrap}
+.gbody{padding:2px 16px 16px}
+.grp.closed .gbody{display:none}
+.glead{
+  font-size:13px; color:var(--tx2); background:var(--gbg,transparent);
+  border-radius:8px; padding:9px 12px; margin:6px 0 14px;
+}
+.glead b{color:var(--gc,var(--tx)); font-weight:600}
+
+.sec{margin:0 0 16px; padding-left:16px; border-left:2px solid var(--line)}
+.sec:last-child{margin-bottom:0}
+.sech{
+  font-size:13.5px; font-weight:600; color:var(--tx); margin:0 0 7px;
+  display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;
+}
+.sech .n{
+  font-size:11px; font-weight:600; color:#fff; background:var(--gc,var(--tx3));
+  border-radius:5px; padding:1px 6px; flex:0 0 auto;
+}
+ul.pts{list-style:none; margin:0 0 6px; padding:0}
+ul.pts>li{
+  position:relative; padding:2px 0 2px 15px; font-size:13px; color:var(--tx2);
+}
+ul.pts>li::before{
+  content:""; position:absolute; left:2px; top:11px; width:5px; height:5px; border-radius:50%;
+  background:var(--gc,var(--tx3)); opacity:.55;
+}
+ul.pts>li>b{color:var(--tx); font-weight:600}
+ul.pts>li code{
+  font-family:ui-monospace,Consolas,monospace; font-size:12px;
+  background:var(--bg); padding:0 5px; border-radius:4px; border:1px solid var(--line);
+}
+.q{
+  margin:6px 0; padding:5px 0 5px 12px; border-left:3px solid var(--gc,var(--tx3));
+  font-size:12.8px; color:var(--tx2); font-style:italic;
+}
+.q::before{content:"金句 "; font-style:normal; font-size:11px; color:var(--gc,var(--tx3)); font-weight:600}
+.ex{
+  margin:6px 0 0; padding:8px 11px; border-radius:9px; background:var(--bg);
+  border:1px dashed var(--line2); font-size:12.6px; color:var(--tx2);
+}
+.ex .exi{display:block; position:relative; padding-left:14px; margin:3px 0}
+.ex .exi::before{content:""; position:absolute; left:2px; top:8px; width:5px; height:5px; border-radius:50%; background:var(--gc,var(--tx3)); opacity:.6}
+.ex .src{color:var(--tx); font-weight:600}
+.ex .ans{
+  display:inline-block; min-width:19px; text-align:center; font-weight:600; font-size:11.5px;
+  padding:0 5px; border-radius:5px; color:#fff; background:var(--gc,var(--tx3)); margin:0 3px;
+}
+.ex .pt{color:var(--tx2)}
+.exhd{font-size:11.5px; font-weight:600; color:var(--gc,var(--tx3)); letter-spacing:.5px}
+
+mark{background:var(--mark); color:inherit; border-radius:3px; padding:0 2px}
+footer{max-width:1500px; margin:0 auto; padding:0 20px 60px; font-size:12px; color:var(--tx3); line-height:1.9}
+footer b{color:var(--tx2)}
+@media (max-width:900px){
+  .rootcol{position:static; flex:1 0 100%; margin-bottom:16px}
+  .mind{flex-direction:column}
+  .groups{border-left:none; padding-left:0}
+  .grp{padding-left:0}
+  .grp::before,.grp::after{display:none}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow">
+    <h1>第三章 · 因果推理 <span class="hsub">判断推理系统课 P08–P29</span></h1>
+    <div class="spacer"></div>
+    <input type="search" id="q" placeholder="搜索知识点 / 例题 / 答案…">
+    <button id="expand">全部展开</button>
+    <button id="collapse">全部收起</button>
+  </div>
+</header>
+<div class="wrap">
+  <nav class="legend" id="legend"></nav>
+  <div class="mind">
+    <div class="rootcol">
+      <div class="rootcard">
+        <div class="rk">Chapter 03</div>
+        <div class="rt">因果推理</div>
+        <div class="rd">先分句式 → 再判方向 → 抠「主体 + 效果」→ 预判选项长相。<br>由因推果的正确选项只有五种，全章就是把这五种练成秒选。</div>
+        <div class="rn">
+          <div>讲次 &nbsp;<b>22</b> 讲（P08–P29）</div>
+          <div>正确选项 &nbsp;<b>5</b> 种 + 由果推因</div>
+          <div>题量占比 &nbsp;引入他因 <b>127</b> 题最重</div>
+        </div>
+      </div>
+    </div>
+    <div class="groups" id="groups"></div>
+  </div>
+</div>
+<footer id="foot"></footer>
+<script>
+const DATA = [
+{
+  id:"m0", name:"总纲 · 先把方向分清楚", tag:"P08–P10", color:"gray",
+  lead:"因果推理的本质是<b>他因</b>，但「他因」分六个品种。全章第一件事：把论据和结论的<b>摆放方向</b>看明白。",
+  secs:[
+    { h:"六种他因 = 全章目录", q:"论证推理每一道题都是他因。你对他因的理解分类越细致，做题就越快——就跟养狗一样，狗还分品种呢。",
+      pts:[
+        "由因推果的五种正确选项：① 建立联系 ② 直接引入他因 ③ 前真后假 ④ 直接举例子 ⑤ 直接反驳论据/结论",
+        "第 ⑥ 种属于第 4 章：由果推因 · 引入其他导致结果相同的原因",
+        "公考里第四、第五种也会出现；联考与考研基本不考 ④⑤"
+      ],
+      ex:[] },
+    { h:"题量分布（复习优先级的直接依据 · 板书原文）", q:"最好吃的肉，非常简单，有八十一道题。",
+      pts:[
+        "建立联系 <b>81 题</b> —— 老师说「最好吃的肉」",
+        "直接引入他因 <b>127 题</b> —— 老师说「最难的就是引入他因」",
+        "前真后假 <b>39 题</b>",
+        "直接举例子 <b>43 题</b> ／ 直接反驳论据·结论 <b>25 题</b>（两者合计六十多道）",
+        "五个子专题里，<b>前两个（81 + 127 = 208）就是绝对主力</b>"
+      ],
+      ex:[] },
+    { h:"由因推果 vs 由果推因", q:"推理的方向永远是从论据推结论。",
+      pts:[
+        "判据不是字面的因果关系，而是<b>论据和结论分别是什么</b>",
+        "<b>由因推果</b>（预言家思维）：论据＝因，结论＝果，朝未来看",
+        "<b>由果推因</b>（刑侦思维）：论据＝果，结论＝因，往回指认原因",
+        "识别口诀 —— <b>果</b>＝现象／数据／对比实验结果；<b>因</b>＝行为／动作／措施／因素",
+        "⚠️ 论据是对比试验的，一律是「果」"
+      ],
+      ex:["本讲无真题｜—｜P08 只有 10 道随堂判断题，如「农民除草施肥 → 今年好收成」＝由因推果；「小赵神色不好 → 昨晚熬夜了」＝由果推因"] },
+    { h:"削弱方向恰好相反（最容易记反的一处）", q:"此他因非彼他因。",
+      pts:[
+        "⭐ <b>两者的区别仅在削弱时有不同；支持和假设完全相同，不用分方向</b>",
+        "由因推果削弱 = 引入「<b>让结果不成立</b>」的他因（即使吃药，感冒也好不了）",
+        "由果推因削弱 = 引入「<b>其他让结果成立</b>」的他因——找背锅侠（不是药，是理疗治好的）",
+        "❌ 陷阱：在由因推果里找「别人也行／别的办法也能」——A 与别的办法不互斥，不能削弱"
+      ],
+      ex:[
+        "2017 国考 · 牛奶色氨酸（由因推果）｜D｜C 项说「米饭碳水化合物也助眠」＝另一个主体、另一条路，「别人行不影响牛奶行不行」",
+        "2021 浙江 · HOV 专用车道（由因推果）｜B｜D 项「鼓励乘公共交通更有效」是迷惑项——小王能做好，不妨碍小王做不好"
+      ] },
+    { h:"一句式 / 两句式与因果方向的叠加关系", q:"两句式推理不是两句话，是两个推理。",
+      pts:[
+        "<b>两句式</b>：论据与结论各自都是完整命题，且共享首尾之一",
+        "<b>一句式</b>：结论自带完整推理，跟论据没有明显重复；论据常是背景信息／实验数据／对比结果",
+        "⚠️ 两种「重复」别混：整体换述的车轱辘话（「喝酒与癌症正相关」＝「喝酒人群癌症发病率升高」）也是<b>一句式</b>",
+        "叠加三条结论：所有由果推因 ⊂ 一句式；所有两句式 ⊂ 由因推果",
+        "⛔ 唯一不存在的组合：<b>两句式 + 由果推因</b>。由因推果里最多的反而是「普通一句式由因推果」",
+        "区分的唯一目的：削弱／支持时<b>要不要兼顾论据里的关键词</b>"
+      ],
+      ex:["教师自改 · 牛奶题改成两句式｜—｜删掉论据里的「睡眠」，让论据与结论各成一个推理，结构立刻变两句式——同一道题，结构改变了打法"] }
+  ]
+},
+{
+  id:"m1", name:"正确选项 ① 建立联系", tag:"P11–P13 · 81 题", color:"green",
+  lead:"老师说这是<b>「最好吃的肉」</b>。整个由因推果里最简单的模板，也是最常出的一种答案。",
+  secs:[
+    { h:"模板一：走进科学（A 带来的因素导致了 B）", q:"我不跟你走进科学了，我就给你直接开门见山。",
+      pts:[
+        "写法：<b>A 带来的一个因素／作用／影响，导致了 B</b>",
+        "动笔前只问两件事：① <b>主体 A 是什么</b> ② <b>效果 B 是什么</b>",
+        "例题重复出现的失分点几乎全在「主体不对」——不是蜜蜂，是「农田的利用方式」"
+      ],
+      ex:[
+        "2022 国考 · 熊蜂与蜜蜂｜D｜结论主体是「农田的利用方式」而非蜜蜂，A/B/C 主语全错，只有 D 讲密集型农田→单一植物→熊蜂觅食难",
+        "2021 国考 · 羟苯甲酮与珊瑚｜C｜B 是「改效果」的迷惑项——这道题的效果不是让游客爽，而是让珊瑚爽",
+        "2020 浙江 · 准父亲饮食与后代健康｜B｜A「体重超标」是假反例（别脑补体重与饮食的关系）",
+        "2025 省联考 · 睡眠时间与癌症风险｜A｜D 是最大坑：睡＜7 小时风险 +69%，竟比睡＜6 小时的 +41% 还高，数字自相矛盾"
+      ] },
+    { h:"模板二：开门见山（A 是 B 的重要标准）", q:"说 A 是 B 的重要的因素、重要标准、重要组成部分，B 的好坏取决于 A 这个标准。",
+      pts:[
+        "关键词清单：重要因素／重要标准／重要指标／重要组成部分／元凶／……的标志之一／……的主要任务之一／成正比、呈正相关",
+        "⚠️ 防呆：「标志之一」不代表一定对，<b>选项和题干的结构要配对扣上</b>才能秒选"
+      ],
+      ex:[
+        "2022 管综 · 汽车使用量与碳排放｜D｜D 说交通运输业「所占比例最大」＝标准模板二",
+        "2024 广东 · 红楼梦与中国传统文化｜B｜结论有「应该」→ 补目标：年轻人都应该了解中国传统文化",
+        "2022 广东 · 人均收入与生活满意度｜C｜「提升生活满意度是政府工作的主要任务之一」＝补目标"
+      ] },
+    { h:"目标型模板：结论出现「应该」", q:"当结论出现「应该」的时候，那你这里应该也有「应该」。",
+      pts:[
+        "结构：做 A 能导致 B，所以我们应该做 A。成立所需的隐藏前提是——<b>我们的目标就是 B</b>",
+        "考场动作：看到结论带「应该」，先找「我们必须要 B／B 是我们的目标」这类选项"
+      ],
+      ex:[] },
+    { h:"两条铁律：主体一致 + 效果明确", q:"结论的主体是什么，正确选项的主语就必须是什么。",
+      pts:[
+        "主体 A 必须一致 —— 12 题里有 8 题的错误项是靠「换主体」编出来的",
+        "效果 B 必须锁定到最小点 ——「预防跌倒」就是别跌倒，不是大脑健康、不是跌倒也少受伤",
+        "「有益心血管」就是心血管，不是延缓衰老、不是全因死亡率"
+      ],
+      ex:[] },
+    { h:"削弱 = 直接指出无关", q:"建立联系、指出相关是支持；我直接简单粗暴指出无关就是削弱。",
+      pts:[
+        "论证题里「搭桥＝支持，拆桥＝削弱」，建立联系的反面就是切断联系",
+        "取反不要矫枉过正：「影响大的反面是影响不大，而不是没影响」"
+      ],
+      ex:[
+        "2021 浙江 · 第一场降雪与最冷冬天｜D｜D「第一场降雪的时间与整个冬天的平均气温无明显相关」直接切断联系",
+        "2018 浙江 · 收视率与节目水准｜D"
+      ] },
+    { h:"论据去魅：四种说法完全等同", q:"对比试验没有任何了不起的地方，它只是在说 A 与 B 同时存在。",
+      pts:[
+        "A 与 B 同时存在 ＝ A 与 B 相关 ＝ 对比 ＝ 对照实验 —— <b>四者没有任何区别</b>",
+        "所以题干写「A 与 B 相关」时，别把它当成已经证明了因果"
+      ],
+      ex:["2025 省联考 · 睡眠时间与癌症风险｜—｜同一道题改写成「提高 20%」「随访 9 年增高 28%」，本质一字未变"] }
+  ]
+},
+{
+  id:"m2", name:"正确选项 ② 直接引入他因", tag:"P14–P22 · 127 题", color:"purple",
+  lead:"题量第一、难度第一。<b>「看似复杂灵活，反而相对简单」</b>——因为它有一个固定的底层公式。",
+  secs:[
+    { h:"总论 · 定义与两条大路", q:"正确选项：直接引入能让结论成立的『正向』，或者让结论不成立的『反向他因』。",
+      pts:[
+        "定义：直接针对<b>结论</b>引入一个正向或反向他因，简单粗暴，不用管论据",
+        "五大特点：看似复杂反而简单／必须看清主体范围与效果／底层逻辑固定所以能秒选／错题反思「掉到哪个坑里」／<b>建立联系本质就是它的一种固定特例</b>",
+        "路 1 · 针对 A：<b>直接说利弊</b> ／ <b>利弊相权</b> ／ <b>做了也白做</b>",
+        "路 2 · 其他角度：<b>其他角度一致（正向）</b> ／ <b>其他角度反向</b>",
+        "口诀：正向支持正向＝<b>双喜临门</b>；反向支持反向＝<b>屋漏偏逢连夜雨</b>",
+        "老师在板书上明确：<b>利大于弊就是支持，弊大于利就是削弱</b>"
+      ],
+      ex:["2025 管综 · RZN-Ⅲ 与大学禁用｜A｜标准直接说利弊：它能加速简化学习、为科技创新腾出时间精力 → 所以禁用不妥 → 秒选。E 是「矫枉过正」（结论反面只是「不禁用」，不必升级成「必须进课堂」）"] },
+    { h:"2.1 直接说利弊（P14–P15）", q:"你有反面因素，我取消了才能够更好嘛。",
+      pts:[
+        "总纲：结论说「好／有利」就引入「不好／有弊」；说「坏／有弊」就引入「好／有利」",
+        "⭐ 第一步永远是<b>先辨结论的正反方向</b>——「考官最喜欢玩的套路，就是正反在这儿给你来回变」",
+        "效果要回论据找「指向」：剪刀手的风险是<b>指纹泄露</b>，不是「拍照时容易摔伤」",
+        "个体反例不能质疑趋势性论述：结论没有逻辑连词时，看到「有的／极少数」就直接排除",
+        "五类一律不选：<b>贵 ／ 弱关联 ／ 特殊人群 ／ 样本量少 ／ 有更好方案</b>",
+        "「贵」在逻辑里不是缺点 —— 除非结论说的是「普及大众、让每个人都用上」"
+      ],
+      ex:[
+        "2021 江苏 · 研究生论文与学位挂钩｜D｜「过去用发表论文代替培养过程监督，导致学生难以沉下心做研究」→ 旧规定确实阻碍学术能力 → 取消当然有利",
+        "2024 浙江 · 呼吸作为身份验证信号（削弱）｜B｜「呼吸样本波动性极高，易受饮食、环境、情绪影响」＝不靠谱；C「准确率并不稳定」是坑，既不代表稳定也不代表不稳定",
+        "2019 省联考 · 虚拟企业与竞争力｜D｜先用选项验证考点预设：选项里没有「有自主权＝有竞争力」的桥 → 判定一句式 → 直接说它好"
+      ] },
+    { h:"2.2 两者相比（P16）", q:"以前说的是 A 好，我现在说的是 A 比 B 好，那我的支持就有两种方式了：说 A 好，或者说 B 不好。",
+      pts:[
+        "结论「A 比 B 好」→ 支持 ＝ 说 A 好 <b>或</b> 说 B 不好（两条路等价）",
+        "结论「A 比 B 好」→ 削弱 ＝ 说 A 不好 <b>或</b> 说 B 好（方向反了就变成削弱）",
+        "结论「A 不会被 B 替代」＝「A 和 B 相比谁好」的另一种说法，支持＝说 A 好（B 不会被替代）或说 B 不好",
+        "⚠️ 三者以上比较：<b>只排除一个对象的选项不能选</b>（还可以选第三个），必须排除其余全部或直接正面说目标项好"
+      ],
+      ex:[
+        "2024 山东 · 新疆海鲜与海水/河口养殖｜A｜结论是「B 不会被 A 轻易替代」→ 支持应为「说 A 不好」；A 项说陆养海鲜养殖周期短、成本高、运输困难＝说 A 不好，秒选。B、D 都在说 A 好，反而削弱",
+        "2018 陕西 · 大学生就业首选二线城市｜B｜三者比较的双坑：C 只排除三四线（还可以去一线）、D 只排除一线（还可以去三四线）；「C、D 综合起来才可以选」，B 直接说选二线"
+      ] },
+    { h:"2.3 利弊相权（P17 · 11 题里 9 题问削弱）", q:"吃芝麻不会丢西瓜，那么苍蝇蚊子也是肉；捡了芝麻丢了西瓜，那就削弱。",
+      pts:[
+        "结构：因为 A 有优点所以要吃 A → 削弱就找「A 同时带来更大的弊」",
+        "严谨性口径：逻辑上应该是「更大的弊」，但考官只要指出<b>有反向因素</b>即可，不必须体现「更大」",
+        "⭐ <b>他因必须在场</b>：你的嫌疑犯得在场，才能说她是嫌疑犯 —— 选项里的他因要出现在题干这个试验／场景里",
+        "四个固定坑：不完美 ≠ 弊（安全帽防不了所有风险）／贵不是弊／能提高 ≠ 提高得更多／好 ≠ 更好",
+        "另加：说「为什么」≠ 说因果／逻辑不相信权威（国际认可、技术成熟永远不选）／「还需评估」＝说了没说／褒贬不明的词不选"
+      ],
+      ex:[
+        "2024 山东 · 引进天敌制约外来物种｜B｜「将对国内生态环境造成更大破坏」——连「更大」都写出来了，标准弊大于利。A「不适宜环境」是脑补坑",
+        "2022 北京 · 睡眠时长与失智｜D｜「失智与睡眠时长无关」＝直接指出无关；C 是「他因不在场」（心血管代谢与精神疾患不一定出现在这个试验中）"
+      ] },
+    { h:"2.4 做了也白做（P18）", q:"引入一个其他的原因，阻碍或者抵消了论据中原因的影响，就说明做了也白做。",
+      pts:[
+        "结构：题干给「一个原因 + 一个正常情况 + 预期达到的效果」→ 反驳＝引入他因让预期落不了地",
+        "三个「白」变体：做了也白做 ／ 吃了也白吃 ／ 带了也白带",
+        "选之前先想清结论正反：结论说「不能」→ 质疑要选「能」，支持才选「吃了也白吃」",
+        "坑：下定义不选（不带任何作用和影响）／有更好的方法 ≠ 我的方法没用／<b>部分得到帮助也是得到帮助</b>／能不能发生和发生能否弥补是两件事",
+        "自检方式：<b>能不能换一个故事</b> —— 换了故事还成立，才算真懂"
+      ],
+      ex:[
+        "2025 四川 · 电商虚拟号码（质疑）｜B｜老师现场画时间轴：还没到这一步就已经泄露过了，后面堵有什么用，做了也白做。C/D 讲泄露后怎么维权弥补，永远不选",
+        "2020 省联考 · 彗星与一氧化磷（质疑）｜B｜撞击时 36 万大气压、2500℃，磷元素发生未知化学变化 —— 什么都成灰了，属于「带了也白带」"
+      ] },
+    { h:"2.5 量变不等于质变（P19）", q:"抛开剂量谈毒性，都是耍流氓。",
+      pts:[
+        "结构：论据是<b>量变</b>（改变／增加／降低／优化），结论是<b>质变</b>（及格／优秀／有害）→ 正确答案让量变到不了质变",
+        "质变标准由判断者决定：同一个「考 90 分」，小王觉得好、他爸觉得差、看名次算好、看隔壁进步算不够好",
+        "系统是有容错性的：微风吹不倒楼房，台风才可能 —— 只有超过承载限度才改变",
+        "好 ≠ 更好 ≠ 最好；具体的数值和改变是两个不同概念",
+        "三种让量变到不了质变的他因：① 容错限度 ② 剂量／安全标准 ③ 物理阻断",
+        "两条硬规则：正确选项<b>只为结论服务</b>、不必解释论据现象；个体反例不能质疑趋势性论述"
+      ],
+      ex:[
+        "2025 管综 · 罗马铅管道与帝国衰亡（质疑）｜E｜「铅水管里一般结有很厚的水垢，阻挡了水和铅的接触，水中含铅量极少，不足以威胁健康」→ 低于危害线；C（铅容器熬葡萄汁含铅高达一克）其实是支持项",
+        "2020 北京 · 塑料瓶装水与塑料微粒（驳斥）｜B｜「保质期内塑料微粒含量远低于各国饮用水安全标准」→ 要谈有害，可我低于安全标准"
+      ] },
+    { h:"2.6 吃的不够多（P20）", q:"考官必须设计一个相对比较离谱的数字（正常一定达不到的量）。",
+      pts:[
+        "四条铁律（板书原文）：① <b>不是高频考点</b> ② 注意逻辑推理的其他断点 ③ 考官<b>必须给一个离谱的数字</b> ④ <b>不要优先选</b>，只有其他选项特别烂时才考虑",
+        "题量清点：公考约 5 道、GMAT 1 道；考研从来没考过",
+        "离谱度标尺：25 罐 Bevex ✅ ／ 一公斤干茶 ✅ ／「提取浓缩后的大剂量」✅ ／「只有喝大量的牛奶」❌ ／ 150 瓶 ❌ ／ 一斤葡萄酒 ❌",
+        "判断尺：一天吃一斤茶叶不靠谱，但一天吃一斤米饭有可能达到 —— 达不到的量才作数",
+        "两大会错的手法：「有更好的方式 ≠ 你不行」（坐地铁更快不代表走路到不了）／「部分有效也是有效」"
+      ],
+      ex:[
+        "2022 山东 · 茶皂素与喝茶减肥｜B｜「每天摄入一公斤干茶叶所含茶皂素才能满足减肥所需」→ 要泡两千杯，量达不到。它是「唯二」的当选题，因为其他选项太烂了",
+        "2019 国考 · 秋葵素与降血糖｜A｜「只有使用提取、浓缩后的大剂量秋葵素才能降低血糖」→ 切片泡水那点量不够；B 是「有更好的办法」，C 是「部分有效也是有效」"
+      ] },
+    { h:"2.7 直接引入他因 · 底层公式（P21）", q:"所有一句式推理（针对结论）的反驳，本质上都是直接引入一个让结论推理不成立的他因。",
+      pts:[
+        "抓住「针对结论」四个字：不用管论据长什么样，直接冲结论去",
+        "板书三点：① 关注主体范围，<b>主体范围要一致</b> ② 关注结论产生的效果，<b>效果范围要明确</b>（不是宽泛的好与坏）③ 深刻理解底层逻辑关系，做到举一反三",
+        "检验标准：<b>能不能换一个故事</b>。逻辑的结构和考点与文字无关",
+        "排除三类：主体漂移（「除了××」）／效果跑偏（别的好处坏处）／答非所问（重要、危险、满意）",
+        "边界：题目是两句式但选项里没有标准两句式选项时，<b>依旧按引入他因处理</b>"
+      ],
+      ex:[
+        "2025 国考 · 产教融合「做深」与「做浅」｜B｜结论要支持「选择做浅」，B 说企业订单量不稳定→不需要固定大量签约，正是「为什么要做浅」的他因；A 只说人力资源重要，没比较",
+        "2021 管综 · 太阳风与更新研究模式｜B｜心法：「项目重要，并不一定我要换项目经理」；B 说标准太阳模型误差约 10–20 倍＝旧模式确实不行"
+      ] },
+    { h:"2.8 其他角度正/反向他因（P22）", q:"我就不提 A 了。",
+      pts:[
+        "三种削弱思路对照（结论结构：因为有 A 的因素，所以预期达到 B 的效果）：",
+        "① 做了也白做：从 A 的角度阻碍／弱化 A ② 利弊相权：从 A 的角度说 A 有优点但带来更大缺点 ③ <b>引入其他角度他因：引入一个 C 的角度，同样能影响 B</b>",
+        "正向＝支持（其他角度帮我），反向＝削弱（其他角度坏我），合起来就是「屋漏偏逢连夜雨」",
+        "总量为定值型：论据是「A + B + C = 定值」、结论是「A 增则 B 减」时，正确项必定把 A、B 之外的 C、D、E 拉进来",
+        "老师澄清：两个角度的利弊相权与一个角度的利弊相权，底层思维没有区别"
+      ],
+      ex:[
+        "2003 管综 · 艾德熊进驻与麦当劳利润｜C｜引入题干之外的「肯德基」——肯德基下降了，艾德熊增加的说不定还不如肯德基下降的多，麦当劳也许反增",
+        "2025 国考 · 原材料涨价与电子企业竞争力｜C｜你在涨价、别人还在降价，此消彼长；B「全球需求缩减」是坑（看的是市场占有率，不是总量）"
+      ] }
+  ]
+},
+{
+  id:"m3", name:"正确选项 ③ 前真后假 / 前假后真 / 前假后假", tag:"P23–P25 · 39 题", color:"red",
+  lead:"把 A → B 拆成前后两格，<b>四格拼图</b>一格一格对号入座。这是全章最像「数学」的一块，也是最容易拿分的一块。",
+  secs:[
+    { h:"四格表（本专题的总开关）", q:"前真后假、前假后真是削弱，前假后假是支持。",
+      pts:[
+        "<b>前真后假</b>（A 发生，B 没发生）→ 削弱，<b>最强的削弱</b>",
+        "<b>前假后真</b>（A 没发生，B 发生了）→ 削弱，强度不如前真后假",
+        "<b>前假后假</b>（A 没发生，B 也没发生）→ 支持。注意是 <b>and</b> 的关系，两个必须同时满足",
+        "<b>前真后真</b>（A、B 都发生）→ 它只出现在<b>题干里</b>，一般不出现在选项里 —— 仅仅两个事实同时存在，不一定有因果关系",
+        "⭐ 铁律：<b>削弱必须前后都说</b>。只说前件不行，只说后件也不行"
+      ],
+      ex:[] },
+    { h:"削弱优先级与识别信号", q:"前真后假是最强的质疑。如果找不着前真后假，那么前假后真也行。",
+      pts:[
+        "优先级：<b>前真后假 &gt; 前假后真</b>（同时出现，优先前真后假）",
+        "识别信号：选项开头全是「有些／有的」→ 不用细看，肯定是考前真后假／前假后真的削弱"
+      ],
+      ex:[
+        "2021 上海 · 痛风与饮食｜D｜结论说「吃太多肉类海鲜是患痛风的必不可少条件」，D「吃了太多肉类海鲜但未患痛风」是标准前真后假（A 是前真后真、B 是前假后真、C 是前假后假）",
+        "2016 省联考 · 分子导热性｜B｜没有前真后假时退而找前假后真 ——「导热性不强，但含大量原子」",
+        "2024 四川 · 少吃也能减肥｜D｜D「肥胖者即使少吃也不能完全消耗每日摄入的热量」是标准前真后假；B「节食才是最直接方法」是他法坑"
+      ] },
+    { h:"「只要……就……」的两条削弱路", q:"只要就是……A 是一个百分之百的、独立的、可以决定 B 的因素。",
+      pts:[
+        "路径一（附加条件）：光有 A 不够，A 还要与 C、D 结合才行",
+        "路径二（前真后假）：即使有 A，也不一定保证 B",
+        "配套提醒：他法不否定此法 —— 「坐高铁可以去北京」，你说「坐飞机更快」，不能质疑坐高铁能去北京",
+        "因果方向错位不选：问「A 能不能带来结果」，别回答「什么能带来 A」"
+      ],
+      ex:["2022 国考 · 肠道菌群与骨密度｜B｜题干「只要改善肠道菌群活性就可以增强骨密度」，B「还须与生活环境和饮食习惯相结合才能增强」走路径一"] },
+    { h:"「必不可少」的翻译规则", q:"谁是必不可少的，箭头就要指向谁。",
+      pts:[
+        "「X 是 Y 必不可少的条件」＝ <b>Y → X</b>（要 Y 就必须有 X，所以有 Y 就该有 X）",
+        "所以削弱的正确形态是：<b>有 Y 但没有 X</b>（前真后假）"
+      ],
+      ex:[] },
+    { h:"由因推果题的「支持」只有两条路", q:"要么建立联系，要么前假后假。",
+      pts:[
+        "支持 ＝ ① 建立联系（说 A 带来的作用／因素／影响导致了 B）或 ② 前假后假（没有 A，也就没有 B）",
+        "前假后假的标准写法：「<b>没有 A，也就没有 B</b>」",
+        "论据的本质：所有试验，本质上就是给了一个「A 与 B 同时存在」的论据。相关和同时存在是一个意思",
+        "易错：<b>增加和降低、有没有，是两个概念</b>；治病就说治病，得病就说得病；重复论据（A 与 B 同时存在）不是支持"
+      ],
+      ex:[
+        "2021 国考 · 蘑菇（麦角硫因）与认知障碍｜B｜得认知障碍者血浆麦角硫因明显偏低＝「没有 A 也就没有 B」；A 只谈前件还扯心脏病",
+        "2020 山东 · 光感刺激与早期阿尔茨海默症｜C｜「终止光感刺激，小鼠症状会加重」＝前假后假；A 脑补「日照长＝接受光感刺激」"
+      ] }
+  ]
+},
+{
+  id:"m4", name:"正确选项 ④ 直接举例子（陈述事实）", tag:"P26–P27 · 43 题", color:"amber",
+  lead:"结论<b>本身没有推理</b>、只是在陈述一个事实或状态时，支持就是把这件事再陈述一遍。",
+  secs:[
+    { h:"板书定义", q:"并不从逻辑的角度去分析原因或者因果关系；直接举出一个符合结论描述的事实情况，对题干的结论进行支持。",
+      pts:[
+        "张三例子（板书原文）：预测张三体重会超标 → 选项给「张三身高 160，体重 180」",
+        "老师说：直接举例子的<b>其他选项往往都比较离谱</b>，所以它反而好认",
+        "统计：1000 多道题里论证推理有 700 多道，其中直接举例子约 <b>40 多道</b>；这类在考研中不出现，公考也属小众"
+      ],
+      ex:[] },
+    { h:"成立前提：结论没有推理", q:"这道题的结论里根本就没有推理……结论只是告诉你一个事实、一个状态，那么我要支持你，就把这个事实、这个状态再陈述一遍即可。",
+      pts:[
+        "两个类比：说张三很胖怎么支持？举出个数字，张三体重一百九",
+        "「赌博会让你倾家荡产」 vs 「你看赌博了倾家荡产了吧」—— 一个意思",
+        "识别流程：找结论引词 → 朝前导一句判是否车轱辘话 → 看结论内部有没有「A 推出 B」：有 → 走建立联系／引入他因；<b>没有推理 → 走直接举例子</b>",
+        "做题流程：先按「建立联系」预判正确选项的样子，选项里没有 → 说明考官是直接针对结论支持 → 去找陈述事实的选项"
+      ],
+      ex:[
+        "2025 事业单位 · 火龙出水｜B｜要支持「没有在实战中使用过」，B「没有任何使用火龙出水装置的记载」是标准陈述事实",
+        "2023 省联考 · 饥饿与「饿怒」｜C｜结论是车轱辘话，C 用「47% 出现易恼、44% 出现愤怒」的事实证明结论成立",
+        "2016 国考 · 西方民主与权利绝对化｜C｜结论无推理只是状态；C 陈述「美国两党常把自己的权利放在国家利益之上，互相否决」这个事实"
+      ] },
+    { h:"三条铁律", q:"题干中有比较，选项中往往也要有比较。",
+      pts:[
+        "① 结论没推理 → 就陈述事实 ② 咬定<b>主体范围</b>与<b>效果范围</b> ③ 题干有比较，选项也要有比较",
+        "个体反例只能质疑<b>绝对性论述</b>，不能质疑<b>趋势性论述</b>",
+        "取否时不要矫枉过正：「愉悦不到 10%」只能推出「不愉悦」，推不出「愤怒」",
+        "「没有证据表明……」＝说了没说"
+      ],
+      ex:["2025 江苏 · 一次挂号管三天｜A｜主体范围＝初诊患者，效果＝等待时间与就诊机会；A 说合理安排初诊与复诊次序、尽量避免长时间排队。B 是坑（总量不变 ≠ 次序不变），C 是时间点错位（「实施前」）"] }
+  ]
+},
+{
+  id:"m5", name:"正确选项 ⑤ 直接反驳论据 / 结论", tag:"P28–P29 · 25 题", color:"blue",
+  lead:"最小众的一种，却是考场上<b>最需要胆量</b>的一种——用错了就是送分给考官。",
+  secs:[
+    { h:"直接反驳结论", q:"谁管你论据？我只要让结论不成立就行了。",
+      pts:[
+        "本质：我不跟你讲任何道理 —— 你说结论是什么，我就直接说结论不对。不讲过渡、不讲机制",
+        "⭐ <b>铁律一：直接反驳结论，在两句式推理中不能选</b>",
+        "⭐ <b>铁律二：只有当其他三个选项都比较离谱、而且它不是两句式推理时</b>，才去选直接反驳结论／论据",
+        "出场频率：近十年国考 + 省考约 1000 道，论证推理约 700 多道，这一类约 <b>25 道</b>",
+        "五类不能真反驳的坑：说试验有问题／指出不完美／搬法律规定／只说样本数量少／说缺点 —— <b>一个东西不完美，并不是它的弊端</b>",
+        "「法律规定不得，就不得了吗？」——法律不能否定事实"
+      ],
+      ex:[
+        "2019 北京 · 巴克斯特与植物有感情｜B｜「具有中枢神经系统的生物才有意识、有感情，植物没有任何神经系统」——简单、明确、直接否定结论；A/C/D 只说试验有问题，最多证明「无法证明」",
+        "2024 浙江 · 霍乱与减少出门｜B｜「霍乱主要通过粪口途径传播，不会通过空气或皮肤接触传播」直接否掉「减少出门」；C 反而在支持"
+      ] },
+    { h:"直接反驳论据", q:"题干中的试验数据是错的；题干中发现的『改变』其实没改变；题干中发现的东西其实是假的。",
+      pts:[
+        "三种典型样貌：数据是错的 ／「改变」其实没改变 ／ 发现的东西是假的 —— 直接质疑题干论据本身不靠谱",
+        "使用前提：<b>不是看到「反驳论据」就秒选，而是其他选项都特别离谱时才敢选</b>",
+        "万能排除：「网站缺乏可信性」「狂热支持者」这类攻击来源权威性或主观态度的选项，永远不要选",
+        "「不是主要因素」这种选项一般也不选（副职也有权、也有影响）",
+        "反驳论据时，至于论据中为什么会出现数据不同，<b>不需要解释</b>"
+      ],
+      ex:[
+        "2021 上海 · 药物双盲实验病死率｜B｜吃药组病死率 8.8%，而同期整体死亡率只有 4.7% → 论据数据本身不合理",
+        "2025 国考 · 海山生物群落｜C｜「早期一些海山中发现的高度特有物种其实是采样不足造成的」——关键在后半句（调查情况与实际不符），而非只说「数量少」；D 实为支持"
+      ] }
+  ]
+},
+{
+  id:"m6", name:"通用工具箱 · 流程 / 优先级 / 坑清单", tag:"全章复用", color:"teal",
+  lead:"把前面五块压成一套可执行的流程，以及一份<b>反复出现的固定坑清单</b>。",
+  secs:[
+    { h:"做题标准流程（削弱题五步）", q:"考场上你只要知道它是正确选项就行了。",
+      pts:[
+        "① 找结论引词，锁定结论句 ② 判句式：一句式 or 两句式（论据是否参与推理）",
+        "③ 判因果方向：论据＝因、结论＝果 → 由因推果；论据＝果、结论＝因 → 由果推因（<b>只有削弱题需要这一步</b>）",
+        "④ 抠出【结论主体】与【具体效果】，收敛到最小点",
+        "⑤ 按对应模板预判正确选项的长相，再到选项里对号入座 —— 找不到标准选项时，退到第 ④ 或第 ⑤ 种（直接举例子／直接反驳）"
+      ],
+      ex:[] },
+    { h:"削弱强度优先级", q:"前真后假是最强的质疑。",
+      pts:[
+        "① <b>前真后假</b>（有因无果）—— 一个反例就能打碎全称命题，最强",
+        "② <b>前假后真</b>（无因有果）",
+        "③ <b>拆桥 / 指出无关</b>（建立联系的反面）",
+        "④ <b>其他让结果成立的他因</b>（仅由果推因可用）；⚠️ 在由因推果里它<b>不能</b>削弱",
+        "⑤ 直接反驳结论／论据（最小众，且受两条铁律限制）"
+      ],
+      ex:[] },
+    { h:"固定坑清单（十连）", q:"你做错题一定要反思：你到底掉到了哪个坑里？",
+      pts:[
+        "① <b>矫枉过正</b> —— 结论只说到「不禁用」，别选「必须进课堂」",
+        "② <b>他法不否定此法</b> ——「坐飞机也能到北京」不削弱「坐高铁能到北京」",
+        "③ <b>因果方向错位</b> —— 问 A 能不能带来结果，别答什么能带来 A",
+        "④ <b>下定义不选</b> —— 只解释「是什么」，不带来任何作用和影响",
+        "⑤ <b>有更好的方案 ≠ 此法无效</b>",
+        "⑥ <b>贵不是弊端</b>（除非结论讲普及大众）",
+        "⑦ <b>个体反例不能质疑趋势性论述</b> —— 结论没有逻辑连词时，「有的／极少数」一律不选",
+        "⑧ <b>「还需评估／没有证据表明」＝说了没说</b>",
+        "⑨ <b>权威与技术成熟不选</b> —— 国际认可、技术成熟都不是因果",
+        "⑩ <b>只知道样本量少不能选</b> —— 必须配「不随机／有系统性偏差」"
+      ],
+      ex:[] },
+    { h:"金句墙（复习时过一遍）", q:"论证推理每一道题都是他因。",
+      pts:[
+        "「推理的方向永远是从论据推结论。」",
+        "「由因推果是预言家思维，由果推因是刑侦思维。」",
+        "「两者的区别仅在削弱的时候有不同；支持和假设相同。」",
+        "「最好吃的肉，非常简单，有八十一道题。」（建立联系）",
+        "「最难的就是引入他因，一百二十七个题。」",
+        "「对比试验没有任何了不起的地方，它只是在说 A 与 B 同时存在。」",
+        "「凡是你能换一个故事，就说明你理解了底层的逻辑。」",
+        "「抛开剂量谈毒性，都是耍流氓。」",
+        "「真正百分之百严谨的逻辑，就是百分之零的难度。」",
+        "「逻辑的结构和考点是与文字无关的。」"
+      ],
+      ex:[] }
+  ]
+}
+];
+
+const G = document.getElementById('groups');
+const LEG = document.getElementById('legend');
+const C = { gray:['var(--c-gray)','var(--cg-bg)'], green:['var(--c-green)','var(--c-green-bg)'],
+            purple:['var(--c-purple)','var(--cu-bg)'], red:['var(--c-red)','var(--cr-bg)'],
+            amber:['var(--c-amber)','var(--ca-bg)'], blue:['var(--c-blue)','var(--cb-bg)'],
+            teal:['var(--c-teal)','var(--ct-bg)'] };
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function ptsHTML(arr){
+  if(!arr||!arr.length) return '';
+  return '<ul class="pts">' + arr.map(x=>'<li>'+x+'</li>').join('') + '</ul>';
+}
+function exHTML(arr,tag){
+  if(!arr||!arr.length) return '';
+  const items = arr.map(s=>{
+    const p = String(s).split('｜');
+    if(p.length>=3) return '<span class="exi"><span class="src">'+p[0].trim()+'</span><span class="ans">'+p[1].trim()+'</span><span class="pt">'+p.slice(2).join('｜').trim()+'</span></span>';
+    return '<span class="exi">'+s+'</span>';
+  }).join('');
+  return '<div class="ex"><span class="exhd">例题</span>'+items+'</div>';
+}
+function secHTML(s,i,tag){
+  const n = String(i+1);
+  return '<div class="sec">'+
+    '<div class="sech"><span class="n">'+n+'</span>'+s.h+'</div>'+
+    (s.q?'<div class="q">'+s.q+'</div>':'')+
+    ptsHTML(s.pts)+
+    exHTML(s.ex,tag)+
+  '</div>';
+}
+
+let allHTML='';
+DATA.forEach((g,gi)=>{
+  const [fg,bg] = C[g.color]||C.gray;
+  const nEx = g.secs.reduce((a,s)=>a+((s.ex&&s.ex.length)||0),0);
+  const nPt = g.secs.reduce((a,s)=>a+((s.pts&&s.pts.length)||0),0);
+  LEG.insertAdjacentHTML('beforeend','<a href="#'+g.id+'" style="color:'+fg+';background:'+bg+'"><b>'+(gi+1)+'</b> '+g.name+'</a>');
+  allHTML += '<div class="grp" id="'+g.id+'" style="--gc:'+fg+';--gbg:'+bg+'">'+
+    '<div class="gcard">'+
+      '<div class="ghead" onclick="this.parentNode.parentNode.classList.toggle(\'closed\')">'+
+        '<span class="caret">▼</span>'+
+        '<span class="gname">'+g.name+'</span>'+
+        '<span class="gtag">'+g.tag+'</span>'+
+        '<span class="gcnt">'+g.secs.length+' 节 · '+nPt+' 知识点 · '+nEx+' 例题</span>'+
+      '</div>'+
+      '<div class="gbody">'+
+        (g.lead?'<div class="glead">'+g.lead+'</div>':'')+
+        g.secs.map((s,i)=>secHTML(s,i,g)).join('')+
+      '</div>'+
+    '</div>'+
+  '</div>';
+});
+G.innerHTML = allHTML;
+
+document.getElementById('expand').onclick = ()=>document.querySelectorAll('.grp').forEach(e=>e.classList.remove('closed'));
+document.getElementById('collapse').onclick = ()=>document.querySelectorAll('.grp').forEach(e=>e.classList.add('closed'));
+
+const TOTAL_EX = DATA.reduce((a,g)=>a+g.secs.reduce((b,s)=>b+((s.ex&&s.ex.length)||0),0),0);
+const TOTAL_PT = DATA.reduce((a,g)=>a+g.secs.reduce((b,s)=>b+((s.pts&&s.pts.length)||0),0),0);
+const TOTAL_SEC = DATA.reduce((a,g)=>a+g.secs.length,0);
+document.getElementById('foot').innerHTML =
+  '<b>第三章 · 因果推理</b>　讲次 P08–P29（22 讲）　·　一级分支 '+DATA.length+' 个　·　知识点小节 '+TOTAL_SEC+' 节　·　要点 '+TOTAL_PT+' 条　·　例题 '+TOTAL_EX+' 道<br>'+
+  '题量分布（老师板书）：建立联系 81 · 直接引入他因 127 · 前真后假 39 · 直接举例子 43 · 直接反驳论据/结论 25<br>'+
+  '内容全部摘自课程笔记 P08–P29 原文（含板书与老师原话），未作外部补充。可离线打开，点分组标题即可折叠。';
+
+const q = document.getElementById('q');
+q.addEventListener('input', ()=>{
+  const v = q.value.trim();
+  document.querySelectorAll('mark').forEach(m=>{ m.replaceWith(document.createTextNode(m.textContent)); });
+  if(!v) return;
+  const pat = v.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  const reT = new RegExp(pat,'i');
+  const re = new RegExp(pat,'gi');
+  document.querySelectorAll('.ghead, .sec, .glead, .legend a').forEach(el=>{
+    if(!reT.test(el.textContent)) return;
+    const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    const nodes=[]; while(w.nextNode()) nodes.push(w.currentNode);
+    nodes.forEach(n=>{
+      if(!reT.test(n.nodeValue)) return;
+      const frag=document.createDocumentFragment();
+      let last=0, s=n.nodeValue, m;
+      re.lastIndex=0;
+      while((m=re.exec(s))){
+        frag.appendChild(document.createTextNode(s.slice(last,m.index)));
+        const mk=document.createElement('mark'); mk.textContent=m[0]; frag.appendChild(mk);
+        last=m.index+m[0].length;
+      }
+      frag.appendChild(document.createTextNode(s.slice(last)));
+      n.parentNode.replaceChild(frag,n);
+    });
+    let g=el.closest('.grp'); if(g) g.classList.remove('closed');
+  });
+});
+</script>
+</body>
+</html>

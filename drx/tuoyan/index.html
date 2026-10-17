@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>知识库</title>
+<style>
+/* ============================================================
+ * styles.css — 判断推理知识库
+ * ============================================================ */
+:root {
+  --bg: #f4f5f7;
+  --panel: #ffffff;
+  --panel-2: #f7f8fa;
+  --panel-3: #f0f2f5;
+  --text: #1f2328;
+  --text-2: #4a5260;
+  --muted: #7b838f;
+  --line: #e4e7eb;
+  --line-2: #eef0f3;
+  --accent: #2f6bff;
+  --accent-soft: #eaf0ff;
+  --accent-text: #1d4ed8;
+  --mark: #ffe58f;
+  --code-fg: #9a3412;
+  --ok: #16a34a;
+  --shadow: 0 6px 24px rgba(20, 26, 40, .08);
+  --shadow-lg: 0 18px 50px rgba(20, 26, 40, .16);
+  --radius: 10px;
+  --header-h: 58px;
+}
+body.dark {
+  --bg: #14161a;
+  --panel: #1b1e23;
+  --panel-2: #21252b;
+  --panel-3: #262b32;
+  --text: #e7e9ed;
+  --text-2: #c2c8d1;
+  --muted: #8b939f;
+  --line: #2b3138;
+  --line-2: #23282e;
+  --accent: #6d9bff;
+  --accent-soft: #1b2740;
+  --accent-text: #8fb4ff;
+  --mark: #6b5a10;
+  --code-fg: #ffb08a;
+  --shadow: 0 6px 24px rgba(0, 0, 0, .4);
+  --shadow-lg: 0 18px 50px rgba(0, 0, 0, .55);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.75 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent-text); text-decoration: none; }
+a:hover { text-decoration: underline; }
+button { font-family: inherit; }
+
+/* ================= 顶栏 ================= */
+#topbar {
+  position: sticky; top: 0; z-index: 50;
+  height: var(--header-h);
+  display: flex; align-items: center; gap: 16px;
+  padding: 0 16px;
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+#brand { display: flex; align-items: center; gap: 10px; cursor: pointer; flex: 0 0 auto; }
+#brand .logo {
+  width: 32px; height: 32px; border-radius: 9px;
+  background: linear-gradient(135deg, var(--accent), #7aa2ff);
+  color: #fff; font-weight: 800; font-size: 16px;
+  display: grid; place-items: center; letter-spacing: .04em;
+}
+#brand .brand-txt { display: flex; flex-direction: column; line-height: 1.25; }
+#brand .brand-txt b { font-size: 14.5px; }
+#brand .brand-txt span { font-size: 11.5px; color: var(--muted); }
+
+.searchbox { position: relative; flex: 1 1 auto; max-width: 560px; margin: 0 auto; }
+.searchbox input {
+  width: 100%; height: 36px; padding: 0 34px 0 34px;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--panel-2); color: var(--text); font-size: 13.5px; outline: none;
+}
+.searchbox input:focus { border-color: var(--accent); background: var(--panel); box-shadow: 0 0 0 3px var(--accent-soft); }
+.searchbox::before {
+  content: ""; position: absolute; left: 13px; top: 50%; width: 13px; height: 13px;
+  margin-top: -8px; border: 1.8px solid var(--muted); border-radius: 50%;
+}
+.searchbox::after {
+  content: ""; position: absolute; left: 24px; top: 50%; width: 6px; height: 1.8px;
+  margin-top: 4px; background: var(--muted); transform: rotate(45deg);
+}
+#qclear {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  width: 22px; height: 22px; border-radius: 50%; border: none; cursor: pointer;
+  background: var(--panel-3); color: var(--muted); font-size: 13px; line-height: 1;
+}
+#qclear:hover { background: var(--line); color: var(--text); }
+
+.topbtns { display: flex; gap: 8px; flex: 0 0 auto; }
+.topbtns button {
+  height: 32px; padding: 0 12px; font-size: 12.5px; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: var(--panel); color: var(--text-2);
+}
+.topbtns button:hover { border-color: var(--accent); color: var(--accent-text); background: var(--accent-soft); }
+#btnMenu { display: none; }
+#btnMenu {
+  width: 34px; height: 32px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--panel); color: var(--text-2); cursor: pointer; font-size: 15px; line-height: 1;
+}
+
+/* ================= 布局 ================= */
+#layout { display: grid; grid-template-columns: 292px minmax(0, 1fr) 216px; align-items: start; }
+#sidebar {
+  position: sticky; top: var(--header-h);
+  height: calc(100vh - var(--header-h));
+  overflow-y: auto; overscroll-behavior: contain;
+  background: var(--panel); border-right: 1px solid var(--line);
+  padding: 8px 0 40px;
+}
+#main { padding: 26px 44px 60px; min-width: 0; }
+#toc {
+  position: sticky; top: var(--header-h);
+  height: calc(100vh - var(--header-h));
+  overflow-y: auto; overscroll-behavior: contain;
+  background: var(--panel); border-left: 1px solid var(--line);
+  padding: 18px 10px 40px;
+}
+
+/* ================= 侧栏目录 ================= */
+.grp-h {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  padding: 12px 14px 8px; border: none; background: none; cursor: pointer;
+  font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--muted);
+  text-align: left;
+}
+.grp-h:hover { color: var(--text); }
+.grp-n { flex: 1; }
+.grp-c {
+  font-size: 10.5px; font-weight: 700; padding: 1px 6px; border-radius: 999px;
+  background: var(--panel-3); color: var(--muted);
+}
+.chev {
+  width: 6px; height: 6px; border-right: 1.6px solid currentColor; border-bottom: 1.6px solid currentColor;
+  transform: rotate(45deg) translate(-1px, -1px); transition: transform .18s; flex: 0 0 auto;
+}
+.grp.closed .chev { transform: rotate(-45deg); }
+.grp.closed .grp-b { display: none; }
+.grp-b { padding-bottom: 4px; }
+.item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 12px 6px 16px; margin: 0 6px 1px;
+  border-radius: 7px; font-size: 13.5px; color: var(--text); text-decoration: none;
+}
+.item:hover { background: var(--panel-2); text-decoration: none; }
+.item.active { background: var(--accent-soft); color: var(--accent-text); font-weight: 600; }
+.pn { font-size: 11px; font-weight: 700; color: var(--muted); min-width: 30px; letter-spacing: .02em; }
+.item.active .pn { color: var(--accent); }
+.nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dm { font-size: 10.5px; color: var(--muted); opacity: .8; font-variant-numeric: tabular-nums; }
+.item.is-read .pn::after { content: "✓"; color: var(--ok); margin-left: 3px; font-size: 10px; }
+
+/* ================= 右侧大纲 ================= */
+.toc-title { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; color: var(--muted); padding: 0 8px 8px; }
+.toc-i {
+  display: block; font-size: 12.5px; line-height: 1.5; color: var(--muted);
+  padding: 4px 8px; border-left: 2px solid transparent; border-radius: 0 5px 5px 0;
+}
+.toc-i.lv3 { padding-left: 17px; font-size: 12px; }
+.toc-i:hover { background: var(--panel-2); color: var(--text); text-decoration: none; }
+.toc-i.active { color: var(--accent-text); border-left-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+
+/* ================= 正文头部 ================= */
+.doc-inner { max-width: 880px; }
+.doc-head { border-bottom: 1px solid var(--line); padding-bottom: 16px; margin-bottom: 22px; }
+.dh-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.badge {
+  display: inline-block; padding: 1px 8px; border-radius: 999px;
+  background: var(--accent-soft); color: var(--accent-text);
+  font-size: 11.5px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.dh-lect, .dh-dur { font-size: 12px; color: var(--muted); }
+.dh-link { font-size: 12px; margin-left: auto; }
+.dh-title { margin: 0 0 6px; font-size: 25px; line-height: 1.35; letter-spacing: -.01em; }
+.dh-theme {
+  margin: 0; font-size: 13px; color: var(--text-2);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* ================= Markdown ================= */
+.md-body > *:first-child { margin-top: 0; }
+.md-p { margin: 11px 0; }
+.md-h { scroll-margin-top: 84px; }
+.md-h1 { font-size: 22px; margin: 26px 0 12px; }
+.md-h2 {
+  font-size: 20px; margin: 34px 0 14px; padding-left: 11px;
+  border-left: 4px solid var(--accent); line-height: 1.4;
+}
+.md-h3 { font-size: 16.5px; margin: 24px 0 10px; color: var(--accent-text); }
+.md-h3::before { content: "▍"; opacity: .45; margin-right: 4px; font-size: 13px; }
+.md-h4 { font-size: 15px; margin: 18px 0 8px; color: var(--text-2); }
+.md-h5, .md-h6 { font-size: 14px; margin: 16px 0 8px; color: var(--muted); }
+.md-hr { border: none; border-top: 1px dashed var(--line); margin: 28px 0; }
+
+.md-quote {
+  margin: 14px 0; padding: 11px 16px;
+  background: var(--panel-2); border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0; color: var(--text-2);
+}
+.md-quote .md-p { margin: 6px 0; }
+.md-quote > *:first-child { margin-top: 0; }
+.md-quote > *:last-child { margin-bottom: 0; }
+.md-quote .md-quote { background: var(--panel-3); border-left-color: var(--muted); }
+
+.md-list { margin: 10px 0; padding-left: 22px; }
+.md-list .md-list { margin: 6px 0; }
+.md-li { margin: 5px 0; }
+.md-li::marker { color: var(--accent); }
+.md-list ol, .md-list ul { padding-left: 20px; }
+
+.md-inline-code {
+  background: var(--panel-3); color: var(--code-fg);
+  padding: 1.5px 5px; border-radius: 5px;
+  font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace;
+  word-break: break-word;
+}
+.md-pre {
+  position: relative; margin: 14px 0; padding: 13px 15px;
+  background: var(--panel-2); border: 1px solid var(--line);
+  border-radius: var(--radius); overflow-x: auto;
+}
+.md-pre code {
+  font: 13px/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace;
+  color: var(--text-2); white-space: pre;
+}
+.md-pre-lang {
+  position: absolute; top: 6px; right: 10px; font-size: 10.5px;
+  color: var(--muted); text-transform: uppercase; letter-spacing: .06em;
+}
+
+/* 表格 */
+.table-wrap {
+  margin: 15px 0; overflow-x: auto;
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel);
+}
+.md-table { width: 100%; border-collapse: collapse; font-size: 13.8px; }
+.md-table th {
+  background: var(--panel-2); text-align: left; font-weight: 700;
+  padding: 9px 12px; border-bottom: 2px solid var(--line); white-space: nowrap;
+  position: sticky; top: 0;
+}
+.md-table td {
+  padding: 9px 12px; border-bottom: 1px solid var(--line-2);
+  vertical-align: top; line-height: 1.68;
+}
+.md-table tbody tr:last-child td { border-bottom: none; }
+.md-table tbody tr:hover td { background: var(--panel-2); }
+.md-table td:first-child { white-space: nowrap; }
+.md-table td:first-child:has(> br) { white-space: normal; }
+
+/* 本讲完整目录折叠 */
+.toc-toggle {
+  display: inline-flex; align-items: center; gap: 7px;
+  margin: 6px 0 10px; padding: 6px 13px; cursor: pointer;
+  border: 1px dashed var(--line); border-radius: 999px;
+  background: var(--panel); color: var(--text-2); font-size: 12.5px;
+}
+.toc-toggle:hover { border-color: var(--accent); color: var(--accent-text); }
+.toc-toggle .chev { transform: rotate(-45deg); }
+.toc-toggle.open .chev { transform: rotate(45deg) translate(-1px, -1px); }
+.native-toc {
+  border-left: 3px solid var(--line); padding-left: 14px; margin-bottom: 22px;
+  background: var(--panel-2); border-radius: 0 8px 8px 0; padding: 10px 14px;
+}
+.native-toc .md-list { columns: 2; column-gap: 22px; }
+.native-toc .md-li { break-inside: avoid; font-size: 13px; }
+
+mark.hl { background: var(--mark); color: inherit; padding: 0 2px; border-radius: 3px; }
+
+/* ================= 翻页 ================= */
+#pager { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 40px; max-width: 880px; }
+.pg {
+  border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 11px 14px; background: var(--panel); display: block; text-decoration: none;
+}
+.pg:hover { border-color: var(--accent); background: var(--accent-soft); text-decoration: none; }
+.pg span { display: block; font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+.pg b { font-size: 13.5px; color: var(--text); font-weight: 600; }
+.pg.next { text-align: right; }
+.pg.disabled { border: none; background: none; }
+
+/* ================= 首页 ================= */
+body.is-home #toc { display: none; }
+body.is-home #layout { grid-template-columns: 292px minmax(0, 1fr); }
+.home { max-width: 900px; }
+.hero {
+  background: linear-gradient(135deg, var(--accent-soft), var(--panel));
+  border: 1px solid var(--line); border-radius: 16px;
+  padding: 30px 32px; margin-bottom: 26px;
+}
+.hero h1 { margin: 0 0 8px; font-size: 29px; letter-spacing: -.02em; }
+.hero-sub { margin: 0 0 20px; color: var(--text-2); font-size: 14px; }
+.stats { display: flex; gap: 30px; flex-wrap: wrap; margin-bottom: 18px; }
+.stat b { display: block; font-size: 24px; line-height: 1.2; color: var(--accent-text); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12px; color: var(--muted); }
+.btn {
+  border: 1px solid var(--line); border-radius: 9px; padding: 9px 16px;
+  background: var(--panel); color: var(--text); font-size: 13.5px; cursor: pointer;
+}
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.btn.primary:hover { filter: brightness(1.07); }
+.hero-src { margin: 14px 0 0; font-size: 12px; color: var(--muted); }
+.kbd-tips { font-size: 12.5px; color: var(--muted); margin-bottom: 26px; }
+kbd {
+  display: inline-block; padding: 1px 6px; margin: 0 1px;
+  border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px;
+  background: var(--panel); font: 11.5px ui-monospace, monospace; color: var(--text-2);
+}
+.ghome { margin-bottom: 26px; }
+.ghome h2 {
+  display: flex; align-items: center; gap: 10px; font-size: 16px; margin: 0 0 12px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--line);
+}
+.ghome h2 i {
+  font-style: normal; font-size: 12px; font-weight: 800; color: var(--accent-text);
+  background: var(--accent-soft); border-radius: 6px; padding: 2px 7px;
+}
+.ghome h2 em { margin-left: auto; font-style: normal; font-size: 11.5px; font-weight: 400; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 12px; border: 1px solid var(--line); border-radius: 9px;
+  background: var(--panel); font-size: 13px; color: var(--text); text-decoration: none;
+}
+.chip:hover { border-color: var(--accent); background: var(--accent-soft); text-decoration: none; }
+.chip .cp { font-size: 11px; font-weight: 700; color: var(--accent-text); }
+.chip .cd { font-size: 10.5px; color: var(--muted); }
+.chip.is-read { border-color: color-mix(in srgb, var(--ok) 40%, var(--line)); }
+.howto { margin: 0; padding-left: 20px; font-size: 13.5px; color: var(--text-2); }
+.howto li { margin: 6px 0; }
+
+/* ================= 搜索结果面板 ================= */
+#results {
+  position: fixed; top: var(--header-h); left: 50%; transform: translateX(-50%);
+  width: min(760px, calc(100vw - 32px)); max-height: calc(100vh - 100px);
+  overflow-y: auto; z-index: 60;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 0 0 14px 14px;
+  box-shadow: var(--shadow-lg); padding: 12px 14px 16px;
+}
+.rs-head { font-size: 12.5px; color: var(--muted); padding: 4px 4px 10px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.rs-head b { color: var(--accent-text); font-size: 14px; }
+.rs-q { color: var(--text); font-weight: 600; }
+.rs-x {
+  margin-left: auto; border: none; background: var(--panel-3); color: var(--muted);
+  border-radius: 6px; padding: 3px 9px; font-size: 11.5px; cursor: pointer;
+}
+.rs-item { border-top: 1px solid var(--line-2); padding: 10px 4px; }
+.rs-title { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--text); text-decoration: none; }
+.rs-title b { font-weight: 600; }
+.rs-g { font-size: 11px; color: var(--muted); }
+.rs-c { margin-left: auto; font-size: 11px; color: var(--accent-text); font-weight: 700; }
+.rs-snips { margin: 6px 0 0 4px; }
+.rs-snip {
+  font-size: 12.5px; color: var(--text-2); line-height: 1.6;
+  padding: 5px 10px; margin: 4px 0; cursor: pointer;
+  background: var(--panel-2); border-left: 2px solid var(--line); border-radius: 0 6px 6px 0;
+}
+.rs-snip:hover { background: var(--accent-soft); border-left-color: var(--accent); }
+.rs-empty { padding: 26px 10px; text-align: center; color: var(--muted); font-size: 13.5px; }
+
+/* ================= 响应式 ================= */
+@media (max-width: 1280px) {
+  #layout { grid-template-columns: 276px minmax(0, 1fr); }
+  #toc { display: none; }
+  body.is-home #layout { grid-template-columns: 276px minmax(0, 1fr); }
+}
+@media (max-width: 900px) {
+  #layout, body.is-home #layout { grid-template-columns: minmax(0, 1fr); }
+  #sidebar {
+    position: fixed; top: var(--header-h); left: 0; bottom: 0; width: 282px; z-index: 55;
+    transform: translateX(-104%); transition: transform .22s; box-shadow: var(--shadow-lg);
+  }
+  body.drawer #sidebar { transform: none; }
+  #btnMenu { display: inline-block; }
+  #main { padding: 20px 18px 60px; }
+  .native-toc .md-list { columns: 1; }
+  .dh-title { font-size: 21px; }
+  #brand .brand-txt { display: none; }
+}
+
+/* ================= 打印 ================= */
+@media print {
+  #topbar, #sidebar, #toc, #pager, #results, .toc-toggle { display: none !important; }
+  #layout { display: block; }
+  #main { padding: 0; }
+  body { background: #fff; font-size: 12px; }
+  .table-wrap { break-inside: avoid; border-color: #ccc; }
+  .md-table th { position: static; }
+  .md-h2 { break-after: avoid; }
+  a { color: #000; }
+}
+
+</style>
+</head>
+<body>
+
+<header id="topbar">
+  <button id="btnMenu" title="目录">☰</button>
+  <div id="brand">
+    <div class="logo">库</div>
+    <div class="brand-txt"><b id="brandTitle">知识库</b><span id="brandSub"></span></div>
+  </div>
+  <div class="searchbox">
+    <input id="q" placeholder="搜索全部笔记…  按 / 或 Ctrl+K" autocomplete="off" spellcheck="false">
+    <button id="qclear" title="清空">×</button>
+  </div>
+  <div class="topbtns">
+    <button id="btnHome" title="返回总览">总览</button>
+    <button id="btnExpand" title="展开 / 收起全部模块">展开目录</button>
+    <button id="btnPrint" title="打印 / 导出 PDF">打印</button>
+    <button id="btnTheme" title="切换明暗">深色</button>
+  </div>
+</header>
+
+<div id="layout">
+  <aside id="sidebar"><div id="nav"></div></aside>
+  <main id="main">
+    <article id="doc"></article>
+    <div id="pager"></div>
+  </main>
+  <nav id="toc"><div class="toc-title">本篇目录</div><div id="tocbody"></div></nav>
+</div>
+
+<div id="results" hidden></div>
+
+<script>window.KB={"meta":{"title":"拖延心理学 · 精读知识库","subtitle":"97 集完整笔记 · 停止内耗 时间管理 自律自控","course":"读人性 · 有声书精读库（B站 UP主：勤者读书）","teacher":"朗读：勤者读书","totalEp":18,"totalSec":13418,"totalWords":9,"howto":[{"b":"按篇翻：","text":"左侧按「篇」分组列全部笔记，每篇覆盖 4–8 集原音频。"},{"b":"全文搜索：","text":"搜主题词（如「内耗」「自律」「目标」）可定位到具体集数。"},{"b":"每篇结构：","text":"本篇速览表 → 各集「核心内容 + 金句摘录」→ 本篇小结。"},{"b":"通读打印：","text":"想顺序通读或导出 PDF，请用「完整合集」版。"}]},"groups":[{"name":"认知篇 · 拖延的面相","items":[{"id":"T01","title":"第0001-0005集","full":"拖延心理学 · 第 1–5 集（拖延的形式症状与放下\"明日复明日\"）","lect":"","dur":"12:00","sec":720,"theme":"","url":"","md":"# 拖延心理学 · 第 1–5 集（拖延的形式症状与放下\"明日复明日\"）\n\n> **合集**：【有声书】拖延心理学停止内耗时间管理自律自控自制（B站 UP主：勤者读书）\n> **对应集数**：第 1–3 集（拖延的形式和症状有哪些）、第 4–5 集（持续克服拖延心理，放下\"明日复明日\"的借口）\n> **时长**：约 12 分钟\n> **本篇要点**：拖延心理在作怪 · 拖延的七大症状 · 立即行动的习惯\n\n---\n\n## 本篇速览\n\n| 集 | 标题 | 一句话要点 |\n| --- | --- | --- |\n| 0001 | 拖延的形式和症状有哪些 | 织毛衣的孕妇故事：拖延只是逃避，问题不会凭空消失，克服拖延要先抛弃拖延心理 |\n| 0002 | 拖延的形式和症状有哪些 | 拖延症状前三条：缺乏明确的愿景、计划不足、缺少时间规划 |\n| 0003 | 拖延的形式和症状有哪些 | 拖延症状后四条：疲劳感、害怕结果、自制力不足、惰性 |\n| 0004 | 持续克服拖延心理，放下\"明日复明日\"的借口 | 两个五年后拉开差距的年轻人：把改变推迟到明天就是逃避，每天进步一点点 |\n| 0005 | 持续克服拖延心理，放下\"明日复明日\"的借口 | 由《明日歌》引出克服拖延的五个具体方法：正视、防恐惧、炼意志、堵借口、做完整 |\n\n---\n\n## 第 0001 集｜拖延的形式和症状有哪些\n\n### 核心内容\n\n本集开宗明义：那些有成就的人拥有很多优秀品质，而做事绝不拖延正是其中最重要的品质之一。生活中的每个人要想在日后有所作为，必须从现在开始养成立即执行的习惯；如果已经有拖延症，第一步就是调节自己的拖延心理。\n\n主讲人指出，拖延的问题几乎会影响每一个人——从员工到总裁，从学生到社会青年，从家庭主妇到职场人士都不例外。因为最了解自己的始终是我们自身：你是否有拖延的习惯，上司、家人、老师也许并不知晓，但你自己一定清楚。如果你已经陷入拖延的泥潭，那么就是时候着手解决这个问题了。\n\n为了说明拖延的荒谬，主讲人讲了一个故事：一位美丽的女士怀孕后，为了打发时间买来漂亮的毛线，想给未出世的孩子织一件衣服，可她迟迟没有动手，总是懒懒地躺在床上。每当想到那些毛线，她总告诉自己：还是先吃点东西、看看电视，等会儿再说吧。等吃完东西、看完电视，天已经黑了，她又会说：晚上开灯织毛衣对孕妇的眼睛不好，还是明天再织吧。第二天她仍用同样的借口拖延，直到孩子出生才下定决心开始动手。孩子很快一岁了，那件毛裙还没开始织；后来她发现毛线已经不够织整件衣服，打算只织一件毛背心，可动手的日子仍被一拖再拖。孩子两岁时毛背心还没织，四年后她终于把毛背心织好，可是孩子已经穿不上了。\n\n这个故事揭示的道理是：拖延并不能帮助我们解决问题，也不会让问题凭空消失，拖延只是一种逃避，甚至会让问题变得严重。那些成功者从不拖延。有拖延习惯的人多半是拖延心理在作怪，而且总在为自己寻找各种借口。要克服拖延的习惯，必须先抛弃拖延的心理；如果不下决心现在就采取行动，事情永远不会完成。\n\n### 金句摘录\n\n> 拖延并不能帮助我们解决问题，也不会让问题凭空消失，拖延只是一种逃避，甚至会让问题变得严重。\n\n> 如果不下决心，现在就采取行动，那事情永远不会完成。\n\n> 因为了解自己的始终是我们自身，你是否有拖延的习惯，也许你的上司家人老师并不知晓，但是你自己肯定清楚。\n\n---\n\n## 第 0002 集｜拖延的形式和症状有哪些\n\n### 核心内容\n\n本集承接上一集，指出我们都会在某种程度上犯同一种错误：把今天应该做完的事情推到明天，享受现在的欢乐，延迟那不可避免的痛苦。但必须明白，即使在当下我们可以把这些痛苦抛出脑海，它们最终仍然会到来，狠狠地击中我们，并扰乱我们外在的平静。接下来主讲人系统梳理拖延的症状，先讲前三个。\n\n第一，缺乏明确的愿景。这是人们拖延最重要的原因之一——找不到努力的方向，太过于迷茫。如果我们看不到未来清晰的愿景，又怎么会有动力呢？为此，我们对将要达到的目标、以及为何要这样做的原因，都要有一个清晰的构想，这样才会有足够的动力去努力并完成任务。\n\n第二，计划不足。要想把事情做到最好，心中必须有一个很高的标准，而不是一般的标准。在决定事情之前，要进行周密的调查论证，广泛征求意见，尽量把可能发生的情况考虑进去，避免出现百分之一的漏洞，直至达到预期效果。\n\n第三，缺少时间（规划）。忙于做事并不意味着高效率，要善于利用每天不同的时间段。一般来说，上午头脑清醒，特别是第一个小时是效率最高的时候，可以把难度大而且重要的工作放在此时进行；而下午大脑一般比较迟钝，可以做一些活动量大但又不需要太动脑筋的工作。这样安排有助于提高工作效率，使工作早日完成。\n\n### 金句摘录\n\n> 将今天应该做完的事情推到明天，享受现在的欢乐，延迟那不可避免的痛苦……最终它仍然会到来，狠狠地击中我们。\n\n> 忙于做事并不意味着高效率，要善于利用每天的不同时间段。\n\n---\n\n## 第 0003 集｜拖延的形式和症状有哪些\n\n### 核心内容\n\n本集继续梳理拖延的症状，讲后四条。\n\n第四是疲劳感。很多时候人们之所以拖延，多半是以疲劳为借口，但实际上，真正令人们疲劳的恰恰是无休止地拖延一件事。一定程度上说，疲劳是可以控制的：如果我们早点休息、按部就班地完成任务、坚持做一件事，就能减少疲劳，增强自信心，逐渐克服拖延心理。\n\n第五是对结果感到害怕，这是拖延的另一个原因。一些人害怕失败，觉得自己没有良好完成任务的能力，因此推迟行动；不管你信与不信，还有另一些人是害怕成功的，他们可能知道完成特定的任务会给自己带来一些并不想要的结果。对此，我们要对完成或不完成一项任务的结局有明确的认识。\n\n第六是自制力不足。现今我们更容易受技术和额外刺激的影响，从而更难保持注意力集中。在做事之前，最好先排除那些可能出现干扰的因素，比如关掉手机或者网络等。\n\n最后是惰性。惰性总是与拖延相伴相生，你会发现那些你不愿意做的工作，往往是你不喜欢做的事，或者是难做的事。因此要克服拖延心理，首先要克服惰性：万事开头难，要把不愿做但又必须做的事情放在首位；对于难做的事，可以试着把困难分解开，各个击破；对于那些难做决定的事，则要当机立断，因为最坏的决定是没有决定。\n\n### 金句摘录\n\n> 真正令人们疲劳的，还是无休止的拖延一件事。\n\n> 对于那些难做决定的事，则要当机立断，因为最坏的决定是没有决定。\n\n---\n\n## 第 0004 集｜持续克服拖延心理，放下\"明日复明日\"的借口\n\n### 核心内容\n\n本集从\"明日复明日\"的现象切入：生活中很多人做事总是拖延，比如拖延缴纳水电费、推迟约会、为未完成的工作任务找借口等等。当你问他的时候，他的回答是\"急什么，时间还多着呢\"。在他们看来，任何事情都可以放到明天。然而明日复明日，明日何其多，我们就这样在期望明天的状态下浪费了生命和光阴，而原本糟糕的状况丝毫未曾改变。\n\n主讲人用一个思想实验说明后果：假设有两个年轻人，能力不相上下，也都一无所有。一个目标明确、积极向上，每天干劲十足，努力充实自己；另一个目标模糊、满足于现状，每天浑浑噩噩、得过且过。想象一下五年之后他们会有什么不同？尽管只有五年，差距已经显现：前者通过自己的奋斗已经小有财富，生活顺风顺水，事业越做越大，春风得意；后者稍微遇到一些问题便感叹自己解决不了，每天活在抱怨中，常常为生计和金钱而苦恼。两种人你想做哪种？当然是第一种，但前提是必须克服拖延的坏习惯，而不是得过且过、浪费时间。\n\n更关键的一层洞察是：把努力寻求改变的想法推迟到明天，本身就是一种逃避——我们在逃避那些需要努力付出才会有成果的事，然后还抱着\"船到桥头自然直\"的侥幸心理；为了避免内心不安，还会给自己寻找太多借口，比如\"今天实在太忙了\"\"我太累了\"等。\n\n要破除拖延、养成立即行动的好习惯，首先是一个态度问题。只要坚持采用这种态度，久而久之就形成了一种习惯；再把这种习惯融入生活，就形成了某种优秀的品质。好习惯的形成和坏习惯的破除都需要一段时间、一个过程：每天进步一点点，持之以恒，水滴石穿，必将成就自我；反过来，每天拖延一点点，你就会越发懒惰，久而久之后悔晚矣。\n\n### 金句摘录\n\n> 我们就这样在期望明天的状态下浪费了生命和光阴，而我们原本糟糕的状况丝毫未曾改变。\n\n> 每天进步一点点，持之以恒，水滴石穿，必将能成就自我；反过来，每天拖延一点点，你就会越发懒惰，久而久之后悔晚矣。\n\n---\n\n## 第 0005 集｜持续克服拖延心理，放下\"明日复明日\"的借口\n\n### 核心内容\n\n本集以明代大学士文嘉的《明日歌》开篇：\"明日复明日，明日何其多？我生待明日，万事成蹉跎。世人若被明日累，春去秋来老将至。\"这正是对做事拖延的真实写照。那么该怎样克服拖延的坏习惯呢？主讲人给出五点可操作的建议。\n\n第一，承认自己有拖延的习惯，并且愿意克服它。这是一切的前提，因为只有正视问题才能解决问题。\n\n第二，看是不是因为恐惧而不敢动手。害怕失败而迟迟不敢动手，是爱拖延的一大原因。如果属于这种情况，克服的方法是强迫自己做假想——我这件事就非做不可——最后你会惊讶地发现，事情竟然做好了。\n\n第三，严格要求自己，磨练毅力。意志薄弱的人常爱拖延；磨练意志力不妨从简单的事情做起，每天坚持做一件简单的事，例如写日记。\n\n第四，严防掉进借口的陷阱。各种借口层出不穷，例如\"时间还早\"\"现在做已经太迟了\"\"准备工作还没有做好\"\"这件事做完了又会给我其他的事\"等等，不一而足，必须警惕。\n\n第五，避免做了一半就停下来。这样很容易让人对事情产生厌烦感；应该做到告一段落之后再停下来，这样会带来一定的成就感，促使你完成剩下的工作。\n\n收尾处主讲人总结：任何美好的愿望，只有在克服拖延习惯的前提下才有实现的可能。拖延是一种坏习惯，立即行动也是一种习惯，不好的习惯一定要用好的习惯来代替。如果拖延的事情迟早要做，为什么要等一下再做呢？也许等一下就会付出更大的代价。最后建议听众自问：在日常生活中有哪些事情是你最喜欢拖延的？现在就下决心将它改变，立即行动，变被动为主动，抓住机会，把事情做得更好。\n\n### 金句摘录\n\n> 我生待明日，万事成蹉跎。\n\n> 不好的习惯一定要用好的习惯来代替。\n\n> 如果拖延的事情迟早要做，为什么要等一下再做呢？也许等一下就会付出更大的代价。\n\n---\n\n## 本篇小结\n\n本篇五集构成\"认清拖延—拆解症状—下定决心—给出方法\"的完整闭环。第 1 集用织毛衣孕妇的故事点题：拖延只是逃避，问题不会消失，克服拖延必先抛弃拖延心理；第 2、3 集系统列出七大拖延症状——缺乏愿景、计划不足、缺少时间规划、疲劳感、害怕结果、自制力不足、惰性，让人能对号入座；第 4 集借两个年轻人五年后的差距，戳破\"明天再说\"的侥幸，指出推迟改变本身就是逃避；第 5 集则以《明日歌》收束，给出正视问题、直面恐惧、磨练意志、堵住借口、做完整再停五条实操方法。全书的主线由此确立：拖延是心理问题而非时间问题，立即行动本身就是一种可以养成的习惯。\n","outline":[{"level":2,"text":"本篇速览","id":"本篇速览"},{"level":2,"text":"第 0001 集｜拖延的形式和症状有哪些","id":"第-0001-集拖延的形式和症状有哪些"},{"level":3,"text":"核心内容","id":"核心内容"},{"level":3,"text":"金句摘录","id":"金句摘录"},{"level":2,"text":"第 0002 集｜拖延的形式和症状有哪些","id":"第-0002-集拖延的形式和症状有哪些"},{"level":3,"text":"核心内容","id":"核心内容-2"},{"level":3,"text":"金句摘录","id":"金句摘录-2"},{"level":2,"text":"第 0003 集｜拖延的形式和症状有哪些","id":"第-0003-集拖延的形式和症状有哪些"},{"level":3,"text":"核心内容","id":"核心内容-3"},{"level":3,"text":"金句摘录","id":"金句摘录-3"},{"level":2,"text":"第 0004 集｜持续克服拖延心理，放下\"明日复明日\"的借口","id":"第-0004-集持续克服拖延心理放下明日复明日的借口"},{"level":3,"text":"核心内容","id":"核心内容-4"},{"level":3,"text":"金句摘录","id":"金句摘录-4"},{"level":2,"text":"第 0005 集｜持续克服拖延心理，放下\"明日复明日\"的借口","id":"第-0005-集持续克服拖延心理放下明日复明日的借口"},{"level":3,"text":"核心内容","id":"核心内容-5"},{"level":3,"text":"金句摘录","id":"金句摘录-5"},{"level":2,"text":"本篇小结","id":"本篇小结"}]},{"id":"T02","title":"第0006-0011集","full":"拖延心理学 · 第 6–11 集（拖延症候群的信号与习惯性怪圈）","lect":"","dur":"14:00","sec":840,"theme":"","url":"","md":"# 拖延心理学 · 第 6–11 集（拖延症候群的信号与习惯性怪圈）\n\n> **合集**：【有声书】拖延心理学停止内耗时间管理自律自控自制（B站 UP主：勤者读书）\n> **对应集数**：第 6–8 集（\"拖延症候群\"的信号有哪些）、第 9–11 集（你能跳出拖延的习惯性怪圈吗）\n> **时长**：约 14 分钟\n> **本篇要点**：拖延症候群自测 · 四种拖延症分类 · 拖延怪圈的六个阶段\n\n---\n\n## 本篇速览\n\n| 集 | 标题 | 一句话要点 |\n| --- | --- | --- |\n| 0006 | \"拖延症候群\"的信号有哪些 | 拖延滋养恐惧、消耗生命，附五条拖延症自测题 |\n| 0007 | \"拖延症候群\"的信号有哪些 | 江郎才尽的故事警示学习型拖延；工作型拖延让你不被上司赞赏 |\n| 0008 | \"拖延症候群\"的信号有哪些 | 婚恋型与亲情型拖延：树欲静而风不止，别把什么都放在明天 |\n| 0009 | 你能跳出拖延的习惯性怪圈吗 | 拖延怪圈第一阶段：\"这次我想早点开始\" |\n| 0010 | 你能跳出拖延的习惯性怪圈吗 | 怪圈中段：从\"赶紧开始吧\"到\"我不开始又怎么样\"再到\"还有时间\" |\n| 0011 | 你能跳出拖延的习惯性怪圈吗 | 怪圈终点：\"是我的问题\"与\"最后的抉择：做还是不做\" |\n\n---\n\n## 第 0006 集｜\"拖延症候群\"的信号有哪些\n\n### 核心内容\n\n本集给\"拖延症候群\"画像。主讲人引用一句观点：只有行动才能缩短自己与目标之间的距离，而拖延是行动的大敌，拖延将不断滋养恐惧。任何成功的人都将\"少说话、多做事\"奉为行动准则。有拖延症的人总是用种种说辞为自己开脱——对方不配合、不可能的任务、苛刻的老板、无聊的工作——最终我们会陷入工作越来越无趣、人生越来越无聊的泥潭中，越加懒惰、越加消极、越加无望。这些有拖延习惯的人，就是所谓的\"拖延症候群\"。\n\n主讲人强调：拖延不仅不能省下时间和精力，反而使人心力交瘁、疲于奔命；拖延消耗的不仅仅是精力，而是生命。知识的获得与勤奋相关联，正如鲁迅所说，伟大的事业同辛勤的劳动成正比，有一分劳动就有一分收获，日积月累，从少到多，奇迹就会出现。\n\n本集还附上一份拖延自测，共五条：一、工作清单里有很多事，你也清楚哪些更重要、哪些是次要，但你还是选择先把那些不重要、难度小的事做掉，越重要的事反而越拖延；二、每次工作前都要选一个\"整点\"开始，比如一点半、两点等；三、不喜欢别人占用自己的时间或打扰自己工作，但其实最不珍惜时间的人正是你自己；四、原本已经准备定下心工作，却还在开工之前去冲杯咖啡或泡杯茶，并给自己找借口说这些饮品会让自己更容易进入状态；五、做某件事的过程中，一旦出现突发事件或想法有变化，就立即停下手头的工作。\n\n判定标准：五条之中若有三条以上符合，很遗憾，你已加入拖延症候群。\n\n### 金句摘录\n\n> 只有行动才能缩短自己与目标之间的距离，而拖延是行动的大敌，拖延将不断滋养恐惧。\n\n> 拖延消耗的不仅仅是精力，而是生命。\n\n> 有一分劳动，就有一分收获，日积月累，从少到多，奇迹就会出现。\n\n---\n\n## 第 0007 集｜\"拖延症候群\"的信号有哪些\n\n### 核心内容\n\n本集将拖延症细细划分为四种，本集讲前两种。\n\n首先是学习型拖延症：对待学业上的事总是一拖再拖，面对众多需要学习的科目、需要参加的学习活动，没有紧迫感，也不会着手处理和学习。主讲人提醒：勤奋可以使聪明之人更具实力，相反，懒惰则会使聪明之人最终江郎才尽，成为时代的弃儿。为此讲了一个南北朝的典故：当时有位有名的文学家江淹，年轻时很有才气，会写文章也会作画；可是年老的时候，总是拿着笔思考半天也写不出任何东西。于是当时有人谣传：有一天江淹在凉亭里睡觉，梦见一个叫郭璞的人对他说，我有一支笔放在你那里已经很多年了，现在该还给我了。江淹摸了摸怀里，果然掏出一支五色笔，还给了郭璞，从此再也写不出美妙的文章，人们都说\"江郎的才华已经用尽了\"。主讲人借此提醒年轻人：也许有人说\"我还年轻，有大把的时间\"，但如果不继续学习，就无法适应急剧变化的时代，会有被淘汰的危险。只有善于学习、懂得学习的人，才能具备高能力，才能赢得未来。\n\n其次是工作型拖延症。主讲人连发三问：你是否经常在上级一催再催之后才把报告交上去？是否每天早上进入办公室后，花半个小时回味昨晚的电视剧情节？是否习惯了在坐下工作之前先跟同事说几句话？如果你总有这些习惯，那大概这就是为什么你总是不被上司赞赏。\n\n### 金句摘录\n\n> 勤奋可以使聪明之人更具实力；相反，懒惰则会使聪明之人最终江郎才尽，成为时代的弃儿。\n\n> 只有善于学习，懂得学习的人，才能具备高能力，才能够赢得未来。\n\n---\n\n## 第 0008 集｜\"拖延症候群\"的信号有哪些\n\n### 核心内容\n\n本集先引用伍迪·艾伦的话：生活中百分之九十的时间只是在混日子。大多数人的生活层次只停留在\"为吃饭而吃饭、为搭公车而搭公车、为工作而工作、为回家而回家\"，他们从一个地方逛到另一个地方，使本来应该尽快做的事情一拖再拖。因各种事由造成拖延的消极心态，就像瘟疫一样毒害着我们的灵魂，影响和消磨着我们的意志和进取心，阻碍了正常潜能的开掘，到头来终将使我们一事无成、终生后悔。\n\n接着讲第三种——婚恋型拖延症。你可能也发现，身边的剩男剩女越来越多，你可能也是其中一员。至于为什么会\"剩下\"，其实也是拖延的结果：我们总希望能在工作、生活如意的情况下再谈及爱情、谈及婚姻，总认为不着急，但如今我们真的着急了。\n\n第四种是亲情型拖延症。\"树欲静而风不止，子欲养而亲不待\"，这是人生一大悲哀。很多时候我们总在感叹：等我有钱了，就去陪父母旅行，去和爱人、孩子享受天伦之乐。但是时间不等人，亲情也不能等。如果想表达你对亲人的爱，别再拖延了。\n\n收尾总结：生活之中的人们，无论是工作、生活还是学习，大事还是小事，凡是应该立即去做的事情就应该立即行动，绝不能拖延，要尽全力做到日事日清。我们的一生中确实有很多个明天，但如果把什么都放在明天做，那明天的明天呢？有句话说得好：我们活在当下，明天属于未来，只有把握好现在，才能决定明天的生活。\n\n### 金句摘录\n\n> 因各种事由造成拖延的消极心态，就像瘟疫一样，毒害着我们的灵魂。\n\n> 树欲静而风不止，子欲养而亲不待，这是人生一大悲哀。\n\n> 我们只有把握好现在，才能决定明天的生活。\n\n---\n\n## 第 0009 集｜你能跳出拖延的习惯性怪圈吗\n\n### 核心内容\n\n本集开始剖析拖延的发生机制。我们每天的生活中总在上演拖延的戏码：拖延为什么会发生，又会在什么情况下发生？对这些情况了解得越多，越有助于克服拖延症。多数拖延症的产生是因为拖延心理在作怪：拖延者总是给自己找各种各样的理由，在事情开始的阶段他们也有美好的愿望，但随着时间推移，心态发生了变化，最终还是没将事情完成，或者没有高效地完成。\n\n影响完成的因素有很多，但这是一个恶性循环的过程，被称作\"拖延的习惯性怪圈\"。每个人拖延过程的周期长短不一，但都是从一个美好的愿望开始，到一个失望的结局。也许在过去几年、一年或几个月内，你都陷在这个怪圈之内找不到跳出来的出口，因此有必要对这个怪圈做更深层次的了解。本集讲怪圈的第一阶段。\n\n第一环：\"这次我想早点开始。\"刚开始的阶段，我们往往充满自信，认为自己这一次一定能做到，于是在着手这件事之前，用这句话给自己打气。我们认为自己一定会按部就班地将任务完成——尽管也明白不可能马上就做好，这需要时间——但还是相信\"无论如何我会努力\"。也许只有经过一段时间之后，你才会认识到，自己正在逐步远离这一愿望。\n\n### 金句摘录\n\n> 每个人拖延过程的周期长短不一，但都是从一个美好的愿望开始，然后到一个失望的结局。\n\n> 也许只有经过一段时间后，你才会认识到，自己正在逐步远离这一愿望。\n\n---\n\n## 第 0010 集｜你能跳出拖延的习惯性怪圈吗\n\n### 核心内容\n\n本集继续拆解怪圈的中段几环。\n\n第二环：\"赶紧开始吧。\"事情开始的最好时机已经过去了。实际上你没有认识到，原来美好的愿望已经不复存在，但你还会安慰自己：如果现在开始还是来得及的。你虽然已经有了焦虑的情绪，压力也向你走来，但你明白\"时间还早着呢，不必太担忧\"。\n\n第三环：\"我不开始又怎么样呢？\"又过了一段时间，你还是没有做手上的事。此刻盘旋在脑海中的，已经不是最初美好的愿望开端，也不是让你焦虑的压力，而是\"到底能不能完成\"。一想到自己可能完成不了，你开始害怕起来，并伴随一连串想法：其一，\"我该早点开始的\"——你明白自己已经浪费了太多时间，不断责备自己，但后悔也没用了；其二，\"做点其他事吧，除了这件\"——你确切知道自己该做什么，却在逃避，反而去寻找替代的事，比如整理房间、按照新食谱去饮食。这些事从前并没有那么吸引你，现在你却狂热地喜欢上了，因为这样能获得心理安慰——\"至少我做成了一些事情\"，甚至产生一种错觉，以为原本没做到的事会因这些事的完美完成而增色不少，但实际情况当然不是如此；其三，\"我无法享受任何事情\"——被拖延的事始终萦绕心头，你也希望通过看电影、做运动、与朋友待在一起、周末徒步旅行来转移注意力，但实际上根本无法享受这些活动带来的快乐；其四，\"我希望没人发现\"——时间过去很久，事情却一点眉目也没有。你不想让人知道糟糕的现状，于是用种种方式掩护自己，让自己看起来很忙：即使并未在工作，也努力营造出忙碌的假象，或许会避开同事、离开办公室，等表面看起来在为原本的工作忙碌，但只有你的内心知道，事情已经被耽误了。\n\n第四环：\"还有时间。\"此时虽然内心愧疚，但仍抱着能完成任务的希望，还是期望会出现完成任务的奇迹。\n\n### 金句摘录\n\n> 至少我做成了一些事情——你甚至会产生一种错觉，但实际情况当然不是如此。\n\n> 只有你的内心知道，事情已经被耽误了。\n\n---\n\n## 第 0011 集｜你能跳出拖延的习惯性怪圈吗\n\n### 核心内容\n\n本集讲完怪圈的最后两环。\n\n第五环：\"是我的问题。\"此刻你已经绝望了，因为深知不但原本美好的愿望没有实现，就连最后希望出现的奇迹也未出现，愧疚和后悔都已无济于事。这时你开始怀疑自己：\"是我这个人有毛病。\"你可能会感觉是不是在某些方面做得不到位或缺了什么，比如自制力、勇气或运气，并追问：\"为什么别人能做到呢？\"\n\n第六环：\"最后的抉择——做还是不做。\"到了这个时候，你只有两个选择：背水一战，或者干脆不开始做。选择之一是\"不做\"：内心巨大的压力让你实在难以忍受，剩下的极少时间也表明再去开始希望渺茫，于是你干脆告诉自己\"算了吧，放弃吧\"，还会自我安慰\"反正都没用了，何必庸人自扰呢\"，最后你逃跑了。选择之二是\"背水一战\"，又分三步：第一步，\"我不能再等了\"——此刻压力已经非常巨大，你认识到时间的重要性，告诉自己哪怕一秒钟也不能浪费；你很后悔浪费时间，感到哪怕最后搏一把也比什么都不做要强得多，于是决定再努力一把。第二步，\"事情还没有这么糟\"——你对事情的难易程度再做一次评估，惊讶地发现虽然困难，却没像想象中那样痛苦，而且最重要的是你已着手在做，这让你觉得充实许多，也为此松了一口气，你甚至找到了其中的乐趣，感叹\"你所受的折磨看来根本是不必要的，为什么当初我没有上手做呢\"。第三步，\"把它做完就行了\"——离原本胜利的目标不远了，事情马上就要做完，你从未觉得时间如此重要，不容许自己浪费一分一秒；这就好比一场冒险游戏，当你沉浸其中、发觉时间不足时，已经没有任何多余的时间去计划思索，你把所有精力都放在\"如何将这件事完成\"上，而不是将事情做得多么完美。\n\n### 金句摘录\n\n> 反正都没用了，何必庸人自扰呢？最后你逃跑了。\n\n> 你所受的折磨看来根本是不必要的，为什么当初我没有上手做呢？\n\n---\n\n## 本篇小结\n\n本篇六集从\"诊断\"推进到\"病理分析\"。第 6–8 集先为拖延症候群画像：拖延滋养恐惧、消耗的是生命本身，并给出五条自测；又按领域把拖延分为学习型、工作型、婚恋型、亲情型四种——江郎才尽的典故警示学习上的懒惰，办公室的磨蹭拖累职场评价，而婚恋与亲情上的拖延，代价是\"子欲养而亲不待\"式的遗憾。第 9–11 集则完整还原\"拖延的习惯性怪圈\"六个阶段：从\"这次想早点开始\"的自信，到\"赶紧开始吧\"的自我安抚，到\"我不开始又怎么样\"的逃避与伪装忙碌，到\"还有时间\"的侥幸，到\"是我的问题\"的自我怀疑，最后在\"做还是不做\"的抉择中要么逃跑、要么背水一战——而背水一战时人们往往发现事情并没有想象中痛苦。看清这个循环的全貌，正是跳出它的第一步。\n","outline":[{"level":2,"text":"本篇速览","id":"本篇速览"},{"level":2,"text":"第 0006 集｜\"拖延症候群\"的信号有哪些","id":"第-0006-集拖延症候群的信号有哪些"},{"level":3,"text":"核心内容","id":"核心内容"},{"level":3,"text":"金句摘录","id":"金句摘录"},{"level":2,"text":"第 0007 集｜\"拖延症候群\"的信号有哪些","id":"第-0007-集拖延症候群的信号有哪些"},{"level":3,"text":"核心内容","id":"核心内容-2"},{"level":3,"text":"金句摘录","id":"金句摘录-2"},{"level":2,"text":"第 0008 集｜\"拖延症候群\"的信号有哪些","id":"第-0008-集拖延症候群的信号有哪些"},{"level":3,"text":"核心内容","id":"核心内容-3"},{"level":3,"text":"金句摘录","id":"金句摘录-3"},{"level":2,"text":"第 0009 集｜你能跳出拖延的习惯性怪圈吗","id":"第-0009-集你能跳出拖延的习惯性怪圈吗"},{"level":3,"text":"核心内容","id":"核心内容-4"},{"level":3,"text":"金句摘录","id":"金句摘录-4"},{"level":2,"text":"第 0010 集｜你能跳出拖延的习惯性怪圈吗","id":"第-0010-集你能跳出拖延的习惯性怪圈吗"},{"level":3,"text":"核心内容","id":"核心内容-5"},{"level":3,"text":"金句摘录","id":"金句摘录-5"},{"level":2,"text":"第 0011 集｜你能跳出拖延的习惯性怪圈吗","id":"第-0011-集你能跳出拖延的习惯性怪圈吗"},{"level":3,"text":"核心内容","id":"核心内容-6"},{"level":3,"text":"金句摘录","id":"金句摘录-6"},{"level":2,"text":"本篇小结","id":"本篇小结"}]},{"id":"T03","title":"第0012-0016集","full":"拖延心理学 · 第 12–16 集（越拖延压力越大的恶性循环与拖延的成因）","lect":"","dur":"12:00","sec":720,"theme":"","url":"","md":"# 拖延心理学 · 第 12–16 集（越拖延压力越大的恶性循环与拖延的成因）\n\n> **合集**：【有声书】拖延心理学停止内耗时间管理自律自控自制（B站 UP主：勤者读书）\n> **对应集数**：第 12–14 集（别让自己陷入越拖延压力越大的恶性循环中）、第 15–16 集（拖延行为的产生是先天形成还是后天所致）\n> **时长**：约 12 分钟\n> **本篇要点**：拖延制造压力 · 恶性循环的四个成因 · 走出循环的三个方法 · 拖延是后天所致\n\n---\n\n## 本篇速览\n\n| 集 | 标题 | 一句话要点 |\n| --- | --- | --- |\n| 0012 | 别让自己陷入越拖延压力越大的恶性循环中 | 上司周一布置的任务迟迟不开工，拖延让焦躁与压力逼近 |\n| 0013 | 别让自己陷入越拖延压力越大的恶性循环中 | 恶性循环四大成因：太过自信、自信心不足、排斥工作、拖拉的坏习惯 |\n| 0014 | 别让自己陷入越拖延压力越大的恶性循环中 | 走出循环三法：定计划、先做要务、设定期限 |\n| 0015 | 拖延行为的产生是先天形成还是后天所致 | 前额叶与心理解释之外：车间主任小刘的懈怠说明拖延是后天形成 |\n| 0016 | 拖延行为的产生是先天形成还是后天所致 | 拖延成因三点分析：先天无拖延、环境影响、后天心理变化 |\n\n---\n\n## 第 0012 集｜别让自己陷入越拖延压力越大的恶性循环中\n\n### 核心内容\n\n本集从一个常见的抱怨切入：总有人感叹\"压力真是太大了，总有很多事做不完\"。但你的压力究竟从何而来？如果你从不拖延时间，还会如此忙碌吗？\n\n主讲人描绘了一个职场人熟悉的场景：周一的早上，上司交代给你一件任务，并嘱托这件事十分紧急，周一下班之前必须交上去。你暗暗下决心一定要好好工作，\"不过不急，还是先把办公室收拾一下吧\"。就这样，一个小时过去了，两个小时过去了，你的工作还没开始。相信这是很多职场白领工作的写照。你是不是也经常陷入这种泥潭不能自拔？是不是觉得压力很大，甚至已经无法透气了？\n\n接下来本集揭示了拖延与压力之间的因果链：在接受一项工作任务之后，由于拖延，时间慢慢流逝，我们会逐渐变得焦躁和不安；在这样的情绪下，我们又会选择更多其他的方法来逃避；到了工作的截止时间，我们开始坐立不安、充满焦虑感，压力直接扑向我们，让我们十分难受。拖延就这样一手制造了它所抱怨的压力。\n\n### 金句摘录\n\n> 你的压力是从何而来呢？如果你从不拖延时间，还会如此忙碌吗？\n\n> 到了工作的截止时间，我们开始坐立不安，充满焦虑感，压力直接扑向我们，让我们十分难受。\n\n---\n\n## 第 0013 集｜别让自己陷入越拖延压力越大的恶性循环中\n\n### 核心内容\n\n本集追问：任何一名拖延者都清楚这是一个恶性循环，也知道拖延的负面效应，但他们似乎还是无法避免地进入这个泥潭，这是为什么？主讲人归纳了四点原因。\n\n第一，太过自信。一些人在接受任务时会想：\"这也太小儿科了吧，根本不值得我花费精力和时间去处理，过两天再说吧，不着急。\"然而他们轻看了事情的难度，等时间接近尾声再着手处理时，才发现时间已经不够了。\n\n第二，自信心不足。与第一种情况完全相反，这些人在评估自身能力时认为自己能力不够，会影响其他同事的工作进度，尤其被其他人催促之后，自卑感更加严重，于是为了逃避这种心理，他们选择了拖延。\n\n第三，排斥工作。一些人面对难度大、耗时多的工作，便产生厌烦情绪，能拖多久就拖多久，甚至到最后期限也不愿意开始执行。其实日常工作中执行任务总会遇到问题，对待问题有两种选择：一种是不怕问题，想方设法去解决它，千方百计地消灭问题，结果是圆满完成任务；另一种是面对问题一筹莫展、不思进取，结果问题依然存在，任务也不会完成。\n\n第四，拖拉的坏习惯。本集讲了专栏作家丹丹的故事：她在时尚杂志行业做了五年，每次接到任务，都会从傍晚开始\"酝酿感情\"——先去超市买几包零食，酸奶、咖啡、薯片等；回到家打开电脑，吃完零食、和聊天工具上的朋友们都聊完以后，再玩几个小游戏；不知不觉时间就过去了。当大家在网络上跟她说晚安时，她也想睡觉了，但一想到稿子还没赶出来，只好打开文档，开始慢吞吞地敲字。交上去的稿件总是比预定时间晚，也总是被领导训斥。丹丹其实也不想这样，但每次似乎都走不出这个怪圈。这个故事说明：丹丹就是个习惯性拖拉的人，假如她能改掉这个不良的工作习惯，工作效率会提高很多。\n\n### 金句摘录\n\n> 不怕问题，想方设法去解决它，千方百计地消灭问题，结果是圆满完成任务。\n\n> 假如她能改掉这个不良的工作习惯，也许她的工作效率会提高很多。\n\n---\n\n## 第 0014 集｜别让自己陷入越拖延压力越大的恶性循环中\n\n### 核心内容\n\n本集正面给出走出恶性循环的方法。拖延势必造成压力，而压力过大对一个人的负面影响是毋庸置疑的。如何走出这样的恶性循环？主讲人给出三条建议。\n\n第一，制定工作计划。在开展工作的时候，可以做出一个详细的每月或每周的工作计划，并养成一种良好的工作习惯，避免工作时紧时松，使工作时间得到合理安排，这是完全可行的。\n\n第二，克服畏难情绪，规定自己首先处理重要事务。我们每天都要处理很多事务，很多人认为先处理那些不紧要的事务会起到激励自己的作用，而实际上这种想法是错误的：把最紧要的事情拖到最后来干，你会发现经过一天疲惫的工作之后，已经没有精力和时间来完成它了。之所以有这种想法，实际上是因为有畏难情绪，是在有意识地回避那些重要的、难度大的工作。因此一定要克服这种心理倾向，首先着手最重要的工作，用足够的时间和精力来处理它，并且把它办好。\n\n第三，为自己设置一个必须完成的期限。本集讲了一个实验：面对一个平均成绩很低的学生，家长准备让他修学分最低的功课，但儿童心理学家却提出完全相反的意见，建议他多修一些课。结果出乎大家意料：这个学生多修课以后，所有功课的成绩不降反升。事实上，这个学生要做的只是打起精神、提高学习效率。时间在现代社会已成为一种有限的资源，为此我们必须戒除拖延的坏习惯，这样就能提高工作效率、减少工作压力，从而更轻松地工作，享受工作带来的乐趣。道理很简单：如果距最后期限还早，我们不会有紧张情绪；随着时间迫近，紧张情绪就会增加；到了最后期限，完成任务的积极性和关注度会被完全激发出来。为了克服惰性、避免拖拉，我们应该为工作设置一个尽可能短的完成时限，通过给自己压力而产生动力，这样所有的工作便能尽快完成。而对于那些对未来起重要作用的长远目标和长远规划，则应该进行合理分解，并且为分解后的目标也设置一个个严格的期限，这样做的好处是防止我们在日常工作中将这些小目标忽视和遗忘。\n\n### 金句摘录\n\n> 把最紧要的事情拖到最后来干，你会发现经过一天疲惫的工作之后，你已经没有精力和时间来完成它了。\n\n> 通过给自己压力而产生动力，这样所有的工作便能尽快地完成。\n\n---\n\n## 第 0015 集｜拖延行为的产生是先天形成还是后天所致\n\n### 核心内容\n\n本集转向拖延的成因问题。对于拖延行为产生的原因，学界历来众说纷纭：有的学者给出生理学上的解释，认为人脑中负责执行功能的是前额叶皮层，它起到过滤的作用，以降低大脑其他部分带来的分散注意力的刺激；这个部位的活性降低或损伤，都会减弱这种功能，进而人的执行能力也会受到一定程度的影响。也有学者给出心理学层面的解释：随着人的成长，接触面不断扩大，在充满挑战的社会生活中，我们的心理逐步发生变化，也就逐步形成了拖延的习惯，有的还掉入了拖延的怪圈。\n\n那么，拖延行为的产生是先天形成还是后天所致？答案是后者。本集讲了食品公司车间主任小刘的经历：三年前他是一名基层员工，每天早早起床、早早来到车间工作，领导来视察时他都在埋头工作，接连一年多，他每个月都被评为生产模范，并因工作努力被提拔为车间主任。然而成为基层管理人员后，小刘开始懈怠了：中午吃完饭，他原本准备去车间看看生产情况，但听到其他主任说\"急什么，有工人在呢，会儿再去也行啊\"，小刘心想也是这个道理，便决定睡个午觉再去；醒来时看到其他领导都在打牌，心里痒痒，也加入其中，大家一起抽抽烟、喝喝茶，一下午的时间就这样过去了。\n\n小刘的经历说明：很多人不是天生就拖延，而是后天逐渐形成的，原因包括对他人的模仿、周围环境的影响等等。本集先做第一点分析：人的先天特点中没有拖延。所谓先天，就是生来即存在的、未经雕琢的。我们来到这个世界的那一刻，就如同一张白纸，除了对生理的基本需要一无所知——那时除了大声啼哭以证明饿了渴了以外，不懂得任何表达行为。我们的很多行为都是在逐步成长过程中形成的，是受到了来自外界的诸多因素影响。\n\n### 金句摘录\n\n> 很多人不是天生就是拖延，而是后天逐渐形成的。\n\n> 从我们来到这个世界的那一刻起，我们就如同一张白纸一样。\n\n---\n\n## 第 0016 集｜拖延行为的产生是先天形成还是后天所致\n\n### 核心内容\n\n本集继续完成成因的三点分析。\n\n第一点收束：随着我们逐渐进入社会、开始参与激烈的社会竞争，内心承受的压力越来越大，接受的任务难度也在逐渐加大，于是我们便产生了逃避的行为，也就是拖延。拖延行为的产生不是先天形成，而是后天所致——相信这一点，我们就有意愿和能力逐步克服自己的拖延行为，只要将想法付诸行动并努力坚持，会取得很好的成效。\n\n第二点：拖延产生的原因部分源于外在环境的因素。有时候我们会认为拖延者总喜欢给自己找借口，固然是借口，但也表明了一点——人的行为是容易被周围环境的变化影响的。比如因为天气恶劣，我们没有及时到达公司；因为生病，我们没有按时将任务交给上级。拖延者身上存在\"心理和行为分离\"这一特点：他们明明知道该怎样做、该如何行动，但实际却没有按照自己内心真正所想的去做。原本打算周四前去某个地方，却到了周末还没有去；原本计划下午约见客户，但到了中午还没给客户打电话。很多人以种种情况作为行动拖延的借口，并且在拖延行为没有造成恶劣后果之前，会不断允许自己这样做，最终真正的拖延习惯就这样形成了。\n\n第三点：人的后天心理变化形成拖延习惯。孩提时代我们无忧无虑，家长让我们去做什么，我们立即就去做，那是因为没有压力；随着时间推移，我们不断长大，有了烦恼；再到进入社会，面临激烈的社会竞争，我们开始有了做不完的工作。面对不想做的事还是必须硬着头皮去做，工作任务越来越难，我们觉得自己被压得喘不过气来，此时便会产生逃避的心理——只要发现有一点空隙的时间可以拿来拖延，我们绝不放过，尽管我们知道这些工作还是必须做的。\n\n### 金句摘录\n\n> 只要我们将自己的想法付诸行动，并努力坚持，相信会取得很好的成效。\n\n> 在拖延者身上是存在心理和行为分离这一特点的：他们明明知道该怎样做，但实际却没有按照自己内心真正所想的去做。\n\n> 只要发现有一点空隙的时间可以拿来拖延，我们绝不放过。\n\n---\n\n## 本篇小结\n\n本篇五集回答两个问题：拖延如何制造压力，以及拖延从何而来。第 12–14 集勾勒出\"拖延—焦躁—逃避—截止期恐慌—压力更大\"的恶性循环，并剖析循环难以挣脱的四个成因：太过自信而轻看任务、自信不足而自卑逃避、排斥困难工作、习惯性拖拉（丹丹的零食加聊天的夜晚就是典型）。破局之道同样有三：制定周计划避免时紧时松、克服畏难先做要务、给每件事包括分解后的长远目标设置尽可能短的期限，用压力换动力。第 15–16 集则从成因层面给出一个令人宽慰也令人警醒的结论：拖延不是先天的宿命，而是后天习得的产物——它可能来自对他人的模仿、环境的暗示，以及成长中压力之下\"心理与行为分离\"的逃避反应。既然是后天习得，就同样可以通过行动重新习得\"立即执行\"。\n","outline":[{"level":2,"text":"本篇速览","id":"本篇速览"},{"level":2,"text":"第 0012 集｜别让自己陷入越拖延压力越大的恶性循环中","id":"第-0012-集别让自己陷入越拖延压力越大的恶性循环中"},{"level":3,"text":"核心内容","id":"核心内容"},{"level":3,"text":"金句摘录","id":"金句摘录"},{"level":2,"text":"第 0013 集｜别让自己陷入越拖延压力越大的恶性循环中","id":"第-0013-集别让自己陷入越拖延压力越大的恶性循环中"},{"level":3,"text":"核心内容","id":"核心内容-2"},{"level":3,"text":"金句摘录","id":"金句摘录-2"},{"level":2,"text":"第 0014 集｜别让自己陷入越拖延压力越大的恶性循环中","id":"第-0014-集别让自己陷入越拖延压力越大的恶性循环中"},{"level":3,"text":"核心内容","id":"核心内容-3"},{"level":3,"text":"金句摘录","id":"金句摘录-3"},{"level":2,"text":"第 0015 集｜拖延行为的产生是先天形成还是后天所致","id":"第-0015-集拖延行为的产生是先天形成还是后天所致"},{"level":3,"text":"核心内容","id":"核心内容-4"},{"level":3,"text":"金句摘录","id":"金句摘录-4"},{"level":2,"text":"第 0016 集｜拖延行为的产生是先天形成还是后天所致","id":"第-0016-集拖延行为的产生是先天形成还是后天所致"},{"level":3,"text":"核心内容","id":"核心内容-5"},{"level":3,"text":"金句摘录","id":"金句摘录-5"},{"level":2,"text":"本篇小结","id":"本篇小结"}]},{"id":"T04","title":"第0017-0021集","full":"拖延心理学 · 第 17–21 集（行为的模仿学习与\"宽容\"式拖延）","lect":"","dur":"12:00","sec":720,"theme":"","url":"","md":"# 拖延心理学 · 第 17–21 集（行为的模仿学习与\"宽容\"式拖延）\n\n> **合集**：【有声书】拖延心理学停止内耗时间管理自律自控自制（B站 UP主：勤者读书）\n> **对应集数**：第 17–19 集（别小看了行为的模仿和学习）、第 20–21 集（宽容，让我们不断地拖延）\n> **时长**：约 12 分钟\n> **本篇要点**：近朱者赤近墨者黑 · 从众与模仿催生拖延 · 宽容是拖延的温床 · 别寄希望于\"下一次\"\n\n---\n\n## 本篇速览\n\n| 集 | 标题 | 一句话要点 |\n| --- | --- | --- |\n| 0017 | 别小看了行为的模仿和学习 | 以他人为参照物：同事都没开始，我便获得了\"恩准\"可以不工作 |\n| 0018 | 别小看了行为的模仿和学习 | 从众心理一拖再拖：铁哥们一句\"去喝一杯\"，工作被抛到九霄云外 |\n| 0019 | 别小看了行为的模仿和学习 | 拖延的三个模仿根源：从众、心理攀比安慰、对不良习惯的学习 |\n| 0020 | 宽容，让我们不断地拖延 | 找借口宽容自己是拖延的第一温床；绝佳时机根本不存在 |\n| 0021 | 宽容，让我们不断地拖延 | 老板的宽容与\"下次我一定\"的自我欺骗，都要连根拔出 |\n\n---\n\n## 第 0017 集｜别小看了行为的模仿和学习\n\n### 核心内容\n\n本集承接前面对拖延成因的分析：人的拖延行为并不是先天形成，而是后天所致，是受外界环境因素的影响和后天心理变化而产生的。因为拖延行为和习惯的产生，我们的预期目标总是无法完成。\n\n本集先描绘一个几乎人人经历过的场景：原本你打算开始工作，但看到其他同事在一起喝茶聊天，你的心情也放松了很多，认为自己也可以不着急。我们常常这样安慰自己：\"他们都还没开始呢，不着急\"\"每次他们都开始一半了，我才开始也能完成工作\"\"他们都还在娱乐呢，我也可以等一等\"。我们总是以他人的标准来看自己的行为——如果看到别人还未实施，我们就好像获得某种恩准一样，可以不工作。事实上，只要我们处于一个集体中，都会不自觉地以他人作为参照物来衡量自己的行为，也会模仿和学习他人的行为习惯，尽管这些习惯未必全是积极的。\n\n为了说明这一点，本集讲了广告公司员工小徐的案例。小徐是个热情活泼的年轻人，聪明、办事能力强、与周围人关系相处得好，也深知协作的重要性，所以他总是保持着和同事一致的工作进度。这天领导又交给大家一个任务，希望大家能够分工完成。到了中午，小徐问另外两个同事：\"你们开始做了吗？\"\"没有，周四开始也来得及，这个项目我们有很多经验，花不了多少时间的。\"\"就是，每次我们交上去了策划案，领导还不是过了好几天才看。\"小徐听到这里也觉得是这个道理，于是就和其他同事一样，拖到最后才开始。\n\n### 金句摘录\n\n> 如果看到别人还未实施，我们就好像获得某种恩准一样，可以不工作。\n\n> 只要我们处于一个集体中，都会不自觉地以他人作为参照物来衡量自己的行为。\n\n---\n\n## 第 0018 集｜别小看了行为的模仿和学习\n\n### 核心内容\n\n本集追问小徐为什么会产生拖延的行为习惯。原因当然有很多，但最重要的还是周围人的影响：看到周围人迟迟未开始，自己获得了心理安慰，也就没有紧迫感了。这一情况在我们很多人身上都发生过。我们常说\"近朱者赤，近墨者黑\"，这就是环境对人的影响——一个人最终能形成良好的习惯还是恶习，也是环境对我们作用的结果。具体来说，有三种因素会让我们产生拖延行为，本集先讲第一种。\n\n第一，从众心理让我们一拖再拖。我们都是社会的人、集体的人，任何人都不可能单独存在：我们是家庭的成员、企业的成员，无论什么身份，都会接触到各种各样的人，行为也会受到他们的影响。在你的工作环境中，总有一些和你关系要好的同事。试想：快到下班的时间了，你的任务还没完成，你原本想再工作一会儿，别把工作拖到明天；但这时你的铁哥们儿已经朝你走过来，兴致勃勃地对你说：\"走，晚上去喝一杯，兄弟几个好久没聚了。\"你说：\"可是我的工作还没做完呢，你们先去吧。\"另外几个同事也走过来说：\"去吧，大家都等着你呢。\"此时你动摇了，也就跟同事一起下班了，你的工作也就被你抛到九霄云外了。\n\n### 金句摘录\n\n> 近朱者赤，近墨者黑——一个人最终能形成良好的习惯还是恶习，也是环境对我们所作用的结果。\n\n> 此时你动摇了……你的工作也就被你抛到九霄云外了。\n\n---\n\n## 第 0019 集｜别小看了行为的模仿和学习\n\n### 核心内容\n\n本集继续讲让人产生拖延行为的后两种因素，并给出告诫。\n\n第二，我们能从他人的拖延行为中获得心理安慰。自古以来人与人之间都会比较，甚至攀比：有些人攀比金钱、社会地位等外在因素，一些人则在行为上攀比——同样的工作，别人有没有做。这不是刻意的比较，而是无意识的，以此来获得某种心理平衡，或者证明自己的价值。在工作中，当我们看到周围同事还未着手做某件事时，也会告诉自己：\"他都还没开始呢，我何必着急？\"或者心里有这样一种声音：\"我们能力相当，他也没做；如果我们同时晚点做，我是能在他前面完成的。\"这样无形之中，你们并未同时努力工作，而是同时把工作推后了。\n\n第三，对他人拖延行为的模仿。我们从出生开始就在学习和模仿：学习走路、说话、识字，这些是好的模仿行为；但也有不好的，比如脏话、懒惰、拖延。从正面积极的学习和模仿中，我们不断成长，获得知识和技能；而对那些不好的行为习惯的模仿，则让我们变得消极怠惰。比如当你看到周围的人都没有完成工作，也没有什么严重的后果时，你便暗示自己：\"我也不用那么快完成工作，慢慢来吧。\"结果可想而知——我们便陷入了拖延的泥潭。还有一点：我们总希望自己能被周围的人喜欢、能合群。对于众人的拖延行为，如果你鹤立鸡群、与众不同，势必会被排挤出去；为了避免这一点，在潜移默化中，你也在学习如何拖延。\n\n主讲人最后提醒：我们的拖延行为在很大程度上源于对周围人的模仿和学习，这能使我们获得心理安慰，对此千万不可小觑这一负面影响。认识到这一点，当我们处于某一集体中时，一定要懂得去其糟粕、取其精华，否则便会对自己产生不利的影响，形成拖延习惯，甚至难以自拔。\n\n### 金句摘录\n\n> 我们并未同时努力工作，而是同时将工作推后了。\n\n> 当我们处于某一集体中时，一定要懂得去其糟粕，取其精华。\n\n---\n\n## 第 0020 集｜宽容，让我们不断地拖延\n\n### 核心内容\n\n本集转向拖延的另一个内因——宽容。也许你也是一名拖延者，和所有拖延者一样，你内心其实也意识到自己的拖延行为，也希望戒除这一习惯；然而每次当你满怀希望地认为自己可以立即实施时，你还是被自己打败，然后继续不断地拖延，陷入拖延心理的怪圈。难道拖延对我们的诱惑真的就那么大吗？主讲人指出：拖延行为的产生是多种因素共同作用的结果，并非先天形成而是后天所致，外在因素尤其是他人的影响很大；然而单单外在因素不能直接对我们产生作用，还需要内因的共同作用。所以不要再把所有责任归结到他人身上——最根本的原因在于你自身。\n\n拖延怪圈就像一个恶性循环：在这一循环中，我们看到的是我们的拖延行为一次次被原谅、一次次被宽容，最后还是继续一次次地拖延。宽容的对象可能是我们自身，也可能是他人，但无论是谁，我们总是走不出这个怪圈——只要有宽容的存在，我们就找到了拖延的理由。本集先讲第一种：宽容自己的表现通常是找借口为自己辩解。一旦工作拖延了、迟迟未着手做某件事，我们总能找到各种各样的借口，尽管这些并不是真的原因。找借口只是为了宽容自己，让自己不受到内心的责备。比如我们经常会在内心告诉自己：\"今天天气太冷了，去和客户谈生意，客户肯定心情也不好，所以我没去。\"\"女朋友昨天对我提出分手了，我的心情实在太糟糕了，我根本没有心情工作，这不怪我。\"\"晚上的汤实在太难喝，我到现在胃里还不舒服，实在无心加班。\"我们似乎总在等待一个绝佳的做事时机，然而这样的时机存在吗？随时都可能出现让我们情绪不佳的情况，难道我们就不需要工作了吗？即便心情不好、天气糟糕，我们还是可以坚持工作，因为我们的身体和大脑在这样的情况下仍然能正常运行。如果一味找借口原谅自己，那只能浪费时间。可见，借口和自我辩解都是为了让自己的内心好过一点，不让自己有过多的负罪感。\n\n### 金句摘录\n\n> 最根本的原因在于你自身。\n\n> 无论宽容我们的是我们自身还是他人，只要有宽容的存在，我们就找到了拖延的理由。\n\n> 我们似乎总是在等待一个绝佳的做事的时机，然而这样的时机存在吗？\n\n---\n\n## 第 0021 集｜宽容，让我们不断地拖延\n\n### 核心内容\n\n本集继续剖析宽容式拖延的另外两种表现，并给出改变的方向。\n\n第二，来自他人的宽容。为了减少负罪感，我们会宽容自己，告诫自己\"下次我一定会努力开始工作\"，但下一次你真的做得到吗？也许你确实下了狠心，但有没有发现，你的上司或老板似乎对这件事并不是太在意：当你告诉他因为一些原因还未完成工作时，他告诉你\"没事，再给你几天时间，慢慢来\"。此时的你怎么想？是不是认为\"既然老板都不着急，我何必着急\"？很明显，老板的宽容更纵容了你的拖延行为。除了自身的宽容以外，他人的宽容也是我们产生拖延行为和习惯的又一大催化剂。我们常会这样想：\"我只是一名员工，老板都不在意我是否如期完成，我又何必在意呢？\"于是你更加肆无忌惮。\n\n第三，你总是在告诉自己\"下次我一定怎么样怎么样\"。当你再一次拖延后，你对自己说：\"这次虽然我没有按时完成工作，但下一次我一定努力及早开始，然后准时完成。\"所谓的下一次，只不过是自欺欺人而已；而当你进入了拖延的泥潭，再想改善现状，真的有那么简单吗？我们还是在宽容自己，然后把希望放到下一次。\n\n主讲人最后指出：既然你已经认识到自己的拖延行为，为什么还不努力改变呢？如何改变才是我们真正需要关心的内容，而这需要从改变自己的意识开始。也许你认为作为员工，上司是你的行为榜样——他宽容你，你就不必在意自己的拖延。但工作只是我们人生的一部分：如果把工作中的拖延行为带到生活、带入人生的各个方面，那么我们永远都会比别人慢一拍，我们的热情、梦想都会丢下我们——这样的人生真的是你想要的吗？从这一点考虑，我们都有必要戒除那些自欺欺人的宽容，将拖延习惯连根拔出。\n\n### 金句摘录\n\n> 很明显，老板的宽容更纵容了你的拖延行为。\n\n> 所谓的下一次只不过是自欺欺人而已。\n\n> 我们都有必要戒除那些自欺欺人的宽容，将拖延习惯连根拔出。\n\n---\n\n## 本篇小结\n\n本篇五集揭示了拖延的两个隐蔽温床：模仿与宽容。第 17–19 集说明，人在集体中会不自觉地以他人为参照物——同事未开工便是自己\"不必开工\"的恩准，铁哥们的邀约能把工作抛到九霄云外；从众、心理攀比式的安慰、对不良习惯的模仿，以及怕被排挤而\"合群\"的心理，让拖延像病毒一样在人群间传播。对策是\"去其糟粕、取其精华\"，不把环境当作借口。第 20–21 集则把矛头指向内因：对自己，我们用天气、心情、汤太咸之类层出不穷的借口来减免负罪感，并幻想存在一个\"绝佳时机\"；对他人，老板的一句\"慢慢来\"反而成了纵容；最终一切都被推给\"下一次\"——而下一次不过是自欺欺人。破除之道只有一条：戒除自欺欺人的宽容，从意识上把拖延习惯连根拔出，否则它将蔓延到人生的各个方面，让热情和梦想都离你而去。\n","outline":[{"level":2,"text":"本篇速览","id":"本篇速览"},{"level":2,"text":"第 0017 集｜别小看了行为的模仿和学习","id":"第-0017-集别小看了行为的模仿和学习"},{"level":3,"text":"核心内容","id":"核心内容"},{"level":3,"text":"金句摘录","id":"金句摘录"},{"level":2,"text":"第 0018 集｜别小看了行为的模仿和学习","id":"第-0018-集别小看了行为的模仿和学习"},{"level":3,"text":"核心内容","id":"核心内容-2"},{"level":3,"text":"金句摘录","id":"金句摘录-2"},{"level":2,"text":"第 0019 集｜别小看了行为的模仿和学习","id":"第-0019-集别小看了行为的模仿和学习"},{"level":3,"text":"核心内容","id":"核心内容-3"},{"level":3,"text":"金句摘录","id":"金句摘录-3"},{"level":2,"text":"第 0020 集｜宽容，让我们不断地拖延","id":"第-0020-集宽容让我们不断地拖延"},{"level":3,"text":"核心内容","id":"核心内容-4"},{"level":3,"text":"金句摘录","id":"金句摘录-4"},{"level":2,"text":"第 0021 集｜宽容，让我们不断地拖延","id":"第-0021-集宽容让我们不断地拖延"},{"level":3,"text":"核心内容","id":"核心内容-5"},{"level":3,"text":"金句摘录","id":"金句摘录-5"},{"level":2,"text":"本篇小结","id":"本篇小结"}]},{"id":"T05","title":"第0022-0026集","full":"拖延心理学 · 第 22–26 集（用拖延对抗焦虑与\"不求出色\"的自我保护）","lect":"","dur":"11:00","sec":660,"theme":"","url":"","md":"# 拖延心理学 · 第 22–26 集（用拖延对抗焦虑与\"不求出色\"的自我保护）\n\n> **合集**：【有声书】拖延心理学停止内耗时间管理自律自控自制（B站 UP主：勤者读书）\n> **对应集数**：第 22–24 集（因为对抗焦虑，你认为晚一点执行也可以）、第 25–26 集（自我保护的目的，你认为不必要出类拔萃）\n> **时长**：约 11 分钟\n> **本篇要点**：拖延是逃避焦虑的手段 · 舒缓焦虑的六个方法 · \"不必优秀\"只是自我安慰 · 低调做人高调做事\n\n---\n\n## 本篇速览\n\n| 集 | 标题 | 一句话要点 |\n| --- | --- | --- |\n| 0022 | 因为对抗焦虑，你认为晚一点执行也可以 | 新人圆圆用\"明天开始吧\"对抗校对任务的焦虑，一周原地踏步 |\n| 0023 | 因为对抗焦虑，你认为晚一点执行也可以 | 缓解焦虑前两法：正视并发掘焦虑源头、放空自己专注身心 |\n| 0024 | 因为对抗焦虑，你认为晚一点执行也可以 | 缓解焦虑后四法：专注事情本身、建立自信、提升能力、结交行动迅速的朋友 |\n| 0025 | 自我保护的目的，你认为不必要出类拔萃 | 文员小贝\"一般般就好\"：不在意优秀，只是拖延后的自我安慰 |\n| 0026 | 自我保护的目的，你认为不必要出类拔萃 | 枪打出头鸟不是拖延的理由：低调做人，高调做事 |\n\n---\n\n## 第 0022 集｜因为对抗焦虑，你认为晚一点执行也可以\n\n### 核心内容\n\n本集揭示拖延与焦虑的关系。现实的工作和生活中，当我们进入一个新环境，或者遇到一件难以预知和掌控的情况时，内心便会产生焦躁不安的情绪，有时甚至寝食难安、提不起兴趣，这就是焦虑。此时我们会自动自发地寻找可以对抗焦虑情绪的措施，比如逃避、转移注意力等，当然还有拖延——这样你会心里舒服一些。\n\n上级交给我们的任务总是带有一些让我们不愉快的因素，谁在工作时都不可能绝对称心如意，此时内心的焦虑情绪就会产生，我们便会不情愿马上去着手做这件事。只要发现还有可以拖延的时间，我们一定会拖延，直到必须交出工作成果。可见，为了对抗焦虑情绪，我们在工作中便认为晚一点执行也可以。实际上在我们工作的圈子中，可能也包括我们自身，经常会采用这样的方式来对抗焦虑。\n\n本集讲了新人圆圆的案例。圆圆今年二十二岁，刚大学毕业，和其他大学毕业生一样缺乏社会和职场经验。在亲戚的介绍下，她进入现在这家文化公司工作，主要负责稿件的文字校对和修改。工作还没到一个星期，她就觉得压力太大了。考虑到她是没经验的新人，领导给她找了一位前辈张姐。张姐经常听到圆圆抱怨：\"天呐，一百多页，什么时候才能弄完？还是明天开始吧。\"好不容易到了第二天，圆圆修改了两三页，张姐又听到她说：\"真是繁琐的工作，修改半天才只有两三页，算了，还是吃完午饭再弄吧。\"就这样，一个星期过去了，圆圆还是停留在刚开始修改的部分，这让张姐很是头疼。\n\n### 金句摘录\n\n> 只要我们发现还有可以拖延的时间，我们一定会拖延，直到必须交出工作成果。\n\n> 为了对抗焦虑情绪，我们在工作中便认为晚一点执行也可以。\n\n---\n\n## 第 0023 集｜因为对抗焦虑，你认为晚一点执行也可以\n\n### 核心内容\n\n本集指出：我们常常听到一些人抱怨——\"这项任务难度太大了，我实在不想做\"\"这件事太繁琐了，还是吃完饭以后再开始吧\"。当你说出这些话以后，其实你已经在用拖延对抗焦虑情绪了。故事中的圆圆正是认为工作太繁琐、内容太多，而迟迟没有展开工作。当今社会，无论从事什么工作，都必须面临激烈的竞争和强大的工作压力，内心自然而然会出现焦虑情绪。此时我们要做的不是一味用拖延来抵抗，而是应该积极舒缓自己的情绪，然后找出应对策略，让自己尽快投入工作中。本集先讲前两个方法。\n\n第一，认识自己焦虑情绪的存在。很多时候，我们在焦躁不安时并未认识到这一情绪会对自己造成什么不利影响。因此，一旦发现自己有焦虑情绪，就应该学会自我调节、自我调整，把意识深层中引起焦虑和痛苦的事情发掘出来，必要时可以采取合适的发泄方法，经过发泄之后，症状可以得到明显减缓。比如当你感到工作压力大无法释怀的时候，可以跟领导沟通一下，寻求好的解决方式，这样也避免了因徘徊不定而造成工作的拖延。\n\n第二，放松心情，舒缓紧张情绪。如果你面临一个新环境，或者接到一件难度大的工作，不要一直提醒自己这些不好的因素。焦虑情绪的产生，完全是由于错误的观念和消极的心理状态引起的。你需要认识到：无论你的工作任务是什么，烦恼都无济于事，最主要的还是必须着手开始，只有这样才能逐渐达到目标。为此，你首先要学会放空，让自己专注于身心。什么叫放空？假如把人的大脑比喻成一个容器，那么放空就是把这个容器中使你焦虑不安的事情都忘记，或者把那些使你紧张得夜不能寐的情绪统统释放出去，取而代之的是淡然。\n\n### 金句摘录\n\n> 当你说出这些话以后，其实你已经在用拖延对抗焦虑情绪了。\n\n> 无论你的工作任务是什么，烦恼都无济于事，最主要的还是必须着手开始。\n\n---\n\n## 第 0024 集｜因为对抗焦虑，你认为晚一点执行也可以\n\n### 核心内容\n\n本集接着讲舒缓焦虑、摆脱拖延的后四个方法。\n\n第三，专注事情本身，淡化焦虑。如果太注重工作的成功或失败，最终的结果只能是你又将工作拖延了；只要你注重工作本身的特点及规律，专心致志地做好它，你就会收到意想不到的效果。\n\n第四，建立自信，相信自己能做好。那些易对工作产生焦虑的人，通常都有自卑的特点：遇事时多半会看低自己的能力而夸大事情的难度，而一旦遇到挫折，焦虑情绪和自卑心理更为明显。因此在发现自己这些弱点的时候，就应该引起重视并努力加以纠正，绝不能存有依赖性、等待他人的帮助。有了自信心之后，就不会再因焦虑而拖延工作了。\n\n第五，与时俱进，努力提升自己的能力。一个人只有保持思想和技术上的先进性，才拥有更强的处理问题的能力，才能在遇到事情的时候找到最佳的解决方法，而不至于因为手忙脚乱而陷入拖延的泥潭里。因此，作为一名职场人士，我们要懂得时刻为自己充电，随时随地学习；只有这样，才能有不断提高自己的意识，才有更强的应变能力。\n\n第六，多交一些行动迅速的朋友。与什么样的人在一起，你就拥有什么样的行为习惯，行为拖沓的同事只会让你也效仿他。为此，你最好结交那些看起来积极向上的同事和朋友，这样你也会产生更多的能量和自信心去着手解决问题，而不是选择逃避。\n\n最后总结：无论我们做什么事，要想真正解决问题，就不能逃避。立即行动起来，焦虑才会无处遁形。\n\n### 金句摘录\n\n> 如果太注重工作的成功或失败，最终的结果只能是你又将工作拖延了。\n\n> 与什么样的人在一起，你就拥有什么样的行为习惯。\n\n> 立即行动起来，焦虑才会无处遁形。\n\n---\n\n## 第 0025 集｜自我保护的目的，你认为不必要出类拔萃\n\n### 核心内容\n\n本集分析拖延的另一重心理根源——\"不必出类拔萃\"的自我保护。拖延行为产生的原因有很多种，也可能是众多原因一起作用的结果。一些人会对自己的拖延行为感到自责，并希望下一次能及时着手工作；但一些人似乎本身就不对工作结果抱有良好的愿望，在他们看来，只需要\"做一做\"就可以了。正是因为这样的心态，让他们不断地拖延工作。\n\n我们都希望自己的工作能力得到肯定，这是证明自身价值的一种方式：同事的认同、上级的赞扬，或者升职加薪，这都是我们在意的，也是我们内心脆弱的地方。然而，一旦我们因为拖延工作而失去这些的时候，便会在内心安慰自己：\"我根本不在意这些，我又没指望自己出类拔萃。\"其实这只是自我安慰——越是自我麻痹，我们越是会拖延行动。\n\n本集讲了行政文员小贝的故事。小贝在一家企业行政部门担任文员，这是个\"清水衙门\"，平时没什么大事，不过和其他部门之间联系比较紧密，因为很多事都要经过行政部批准。然而在公司甚至部门内部，很多人都不知道有小贝这个人的存在，因为他太普通了：普通的长相、普通的学历、普通的职位。其实这不是最主要的原因，问题在于小贝自身——他从来不争取什么，无论做什么事，总是慢悠悠的。一次，一个关系不错的同事问他任务完成得怎么样了，他回答说：\"马马虎虎，周末前能完成吧。\"同事问：\"你没想过更好更快地完成工作，然后获得上级嘉许吗？\"小贝答：\"我没想过这一点，一般般就好了，我觉得没必要表现得那么优秀。\"同事听后没有再说话。\n\n从这个故事可以看出，小贝与小琴都是拖延者，而他们拖延的原因也都是\"不在意、不需要那么优秀\"：小贝认为一般就好，小琴则不希望枪打出头鸟、不想得罪他人。但无论如何，我们都能看出他们的消极心态。\n\n### 金句摘录\n\n> 越是自我麻痹，我们越是会拖延行动。\n\n> 我根本不在意这些，我又没指望自己出类拔萃——其实这只是自我安慰。\n\n---\n\n## 第 0026 集｜自我保护的目的，你认为不必要出类拔萃\n\n### 核心内容\n\n本集深入追问这种心态的实质，并给出职场上的正确姿态。\n\n如果你也是这样的人，不妨问自己一下：你真的不在乎吗？还是因为已经拖延了，而不在意后果？真正的原因在于后者。这种消极的心态一旦占据我们的内心，就不仅仅是工作拖延这一个问题了：我们还会变得行动迟缓、精力不足、缺乏动力、食欲不振，甚至可能情绪忧郁，严重的还会产生心理疾病。反过来，如果努力破除拖延的习惯、凡事立即行动，也会改变我们的生活和工作状态，让我们自身充满活力。\n\n当然，一些人可能会认为\"枪打出头鸟\"：那些在职场太进取的人，通常会成为别人嫉恨和打击的对象，聪明的处事方式就是比别人慢一点，这也是自我保护的方式。主讲人对此给出了辨析：的确，职场切忌锋芒太露，但这并不是鼓励我们做事拖延。毕竟做事与做人不同——领导和上级欣赏那些会为人处事者，但他们也不希望员工行为拖沓、耽误工作。所以真正聪明的职场人，总是奉行\"低调做人、高调做事\"的行为准则，他们从不放弃的一点，便是努力学习、充实自我。\n\n总结起来：对很多拖延者来说，\"我不需要那么优秀\"只是一种自我安慰，或是为了不想让自己那么辛苦而找出的借口——这样一旦行动拖延时，就不必自责。正是这样一种消极心理，导致了他们长期行为的拖延。为此，我们在工作过程中有必要破除这一心理，努力调整自我。\n\n### 金句摘录\n\n> 你真的不在乎吗？还是因为已经拖延了，而不在意后果？真正的原因在于后者。\n\n> 真正聪明的职场人总是奉行低调做人、高调做事的行为准则。\n\n---\n\n## 本篇小结\n\n本篇五集揭开了两种\"自我麻痹式\"的拖延心理。第 22–24 集讲焦虑：面对繁琐、压力大的任务，\"明天再说\"\"吃完饭再弄\"是我们对抗焦虑的止痛药，新人圆圆一周改不完开头几页便是典型。但止痛药有毒——拖延只会让焦虑在截止日期前加倍反扑。真正的解药是六条正路：正视并宣泄焦虑、放空身心、专注事情本身而非成败、建立自信、持续充电提升能力、多与行动迅速的人为伍。第 25–26 集讲自我保护：当拖延让我们错失认同与嘉许时，\"我没必要那么优秀\"便成了遮羞布；小贝的\"一般般就好\"看似淡泊，实则是用消极换来自责的豁免，长期下去还会侵蚀精力和情绪。而\"枪打出头鸟\"也不构成拖延的理由——职场正确的姿势是低调做人、高调做事。看清这两层心理机制，才能明白拖延的代价从来不是舒适，而是被麻痹掉的人生。\n","outline":[{"level":2,"text":"本篇速览","id":"本篇速览"},{"level":2,"text":"第 0022 集｜因为对抗焦虑，你认为晚一点执行也可以","id":"第-0022-集因为对抗焦虑你认为晚一点执行也可以"},{"level":3,"text":"核心内容","id":"核心内容"},{"level":3,"text":"金句摘录","id":"金句摘录"},{"level":2,"text":"第 0023 集｜因为对抗焦虑，你认为晚一点执行也可以","id":"第-0023-集因为对抗焦虑你认为晚一点执行也可以"},{"level":3,"text":"核心内容","id":"核心内容-2"},{"level":3,"text":"金句摘录","id":"金句摘录-2"},{"level":2,"text":"第 0024 集｜因为对抗焦虑，你认为晚一点执行也可以","id":"第-0024-集因为对抗焦虑你认为晚一点执行也可以"},{"level":3,"text":"核心内容","id":"核心内容-3"},{"level":3,"text":"金句摘录","id":"金句摘录-3"},{"level":2,"text":"第 0025 集｜自我保护的目的，你认为不必要出类拔萃","id":"第-0025-集自我保护的目的你认为不必要出类拔萃"},{"level":3,"text":"核心内容","id":"核心内容-4"},{"level":3,"text":"金句摘录","id":"金句摘录-4"},{"level":2,"text":"第 0026 集｜自我保护的目的，你认为不必要出类拔萃","id":"第-0026-集自我保护的目的你认为不必要出类拔萃"},{"level":3,"text":"核心内容","id":"核心内容-5"},{"level":3,"text":"金句摘录","id":"金句摘录-5"},{"level":2,"text":"本篇小结","id":"本篇小结"}]}]},{"name":"根源篇 · 为什么拖延","items":[{"id":"T06","title":"第0027-0033集","full":"拖延心理学 · 第 27–33 集（悲观情绪、向压力妥协与\"我本来就不行\"）","lect":"","dur":"15:00","sec":900,"theme":"","url":"","md":"# 拖延心理学 · 第 27–33 集（悲观情绪、向压力妥协与\"我本来就不行\"）\n\n> **合集**：【有声书】拖延心理学停止内耗时间管理自律自控自制（B站 UP主：勤者读书）\n> **对应集数**：第 27–29 集（拖延让你总是沉溺在悲观的情绪之中）、第 30–31 集（拖延造成你的压力妥协只是挥霍时间的借口）、第 32–33 集（拖延造成你的自我评价我本来就不行）\n> **时长**：约 15 分钟\n> **本篇要点**：悲观情绪催生拖延 · 管理情绪四步法 · 向压力妥协就是挥霍时间 · 破除自我怀疑五招\n\n---\n\n## 本篇速览\n\n| 集 | 标题 | 一句话要点 |\n| --- | --- | --- |\n| 0027 | 拖延让你总是沉溺在悲观的情绪之中 | 被批评后的负面暗示让工作一拖再拖；王帅在长吁短叹中步入中年 |\n| 0028 | 拖延让你总是沉溺在悲观的情绪之中 | 摆脱悲观三步：别再抱怨失败、转变观念别沮丧、从错误中学习 |\n| 0029 | 拖延让你总是沉溺在悲观的情绪之中 | 做上进的人随用随学；弱者任思绪控制行为，强者让行为控制思绪 |\n| 0030 | 拖延造成你的压力妥协只是挥霍时间的借口 | 值班电报员小芳冒名发报避免惨剧：积极主动才能冲破压力 |\n| 0031 | 拖延造成你的压力妥协只是挥霍时间的借口 | 妥协源于轻视工作与敷衍塞责；处理问题，速度就是效益 |\n| 0032 | 拖延造成你的自我评价我本来就不行 | 自我怀疑是拖延的重要原因：拖延是为了逃避失败的打击 |\n| 0033 | 拖延造成你的自我评价我本来就不行 | 破除自我怀疑五招：接纳自己、正确比较、自我鼓励、剔除消极用语、敢于挑战 |\n\n---\n\n## 第 0027 集｜拖延让你总是沉溺在悲观的情绪之中\n\n### 核心内容\n\n本集讨论悲观情绪与拖延的关系。设想这样一个场景：工作中我们犯了错，或者工作任务没做到位，被领导叫到办公室狠狠地批评了一顿，此时你是什么心情？是不是感觉到十分委屈，感觉自己在领导心里留下了极为不好的印象，甚至觉得自己日后在职场无立身之地了？一系列负面的暗示让我们的心情十分糟糕，我们沉浸在悲观之中，还有什么心情工作？于是致使手头上的工作一拖再拖。可见，悲观情绪会让我们产生拖延，产生更大强度的压力。\n\n本集讲了王帅的故事。王帅是个多愁善感的小伙子，虽然才二十几岁，但他已经显得老态龙钟：他从来不与朋友们一起出门玩，而是一个人坐在藤椅上一言不发地凝神静思，有时还会莫名其妙地唉声叹气。在长吁短叹中，王帅已经步入中年。有一次，他看一本心理学书籍，发现书中的主人公和自己太像了。主人公向一位心理学家倾诉苦恼，心理学家一语道破其中原因：\"你已经三十几岁了，但你有反思过过去吗？你过去之所以从未快乐过，关键在于你总把已经逝去的一切看得比实际情况更好，总把眼前发生的一切看得比事实更糟，总把未来的前景描绘得过分乐观，而实际却又无法达到如此。渐渐地形成了恶性循环，自然就钻入庸人自扰的怪圈了。\"看到这里，王帅才发现，一直以来自以为成熟的自己，却一直在做不成熟的事。心理学家还说，人的性格弱点就在于好高骛远，总是向世界提出不切实际的要求，这就是所谓不成熟的表现。\n\n年轻人为何会荒废自己大半生的时间？因为他总沉浸在悲观失望之中。假如他能早一点管理自己的情绪，也许就能早点行动起来。在现实生活中，很多人悲观情绪产生的主要原因还是因为犯了错，一味的悔恨让他们感到失望悲观。其实人非圣贤，孰能无过，任何人都会犯错误，关键在于能否从中吸取教训：分析犯错的原因，避免今后再犯相同的错误。犯错误未必是一件坏事，它可以让我们看到自身的缺点、体会到自己的不足，这样我们才会从错误中逐渐成长起来。\n\n### 金句摘录\n\n> 悲观情绪会让我们产生拖延，产生更大强度的压力。\n\n> 人非圣贤，孰能无过——关键在于能否从中吸取教训。\n\n---\n\n## 第 0028 集｜拖延让你总是沉溺在悲观的情绪之中\n\n### 核心内容\n\n本集给出摆脱悲观、解决拖延问题的具体步骤，本集讲前三步。\n\n第一，别再抱怨你的失败。情绪想立刻有所改善，就必须从现在起，从我们所处的一片混乱的环境中解脱出来，去重新梳理自己走过的路，看清楚功过得失，这样就能做到心平气和，也就能自然管理自己的情绪了。\n\n第二，转变观念，别再沮丧。除了工作，生活中的我们也可能遇到某些困难、某些不顺心的事，你可能会因此而变得沮丧。其实应该告诉自己：困境是另一种希望的开始，它往往预示着明天的好运气。因此你只要放松自己，告诉自己希望是无处不在的，再大的困难也会变得渺小。\n\n第三，自我性格的纠正，成为一个果敢的行动派。无论是企业还是领导，最不希望看到的就是员工因为犯错误而一蹶不振，进而工作拖沓；他们也常常鼓励员工从错误中不断学习、不断提高。松下幸之助说过：\"偶尔犯了错误无可厚非，但从处理错误的方法中，我们可以看清楚一个人。\"施振荣说，宏碁（音）有一个特点，就是允许犯错，因为我们认为\"认输才会赢\"。世界五百强企业西门子也同样允许下属犯错误——在他们看来，如果员工在几次错误之后变得更茁壮了，那对公司是很有价值的。\n\n### 金句摘录\n\n> 困境是另一种希望的开始，它往往预示着明天的好运气。\n\n> 偶尔犯了错误无可厚非，但从处理错误的方法中，我们可以看清楚一个人。（松下幸之助）\n\n---\n\n## 第 0029 集｜拖延让你总是沉溺在悲观的情绪之中\n\n### 核心内容\n\n本集讲第四个方法，并做本小节总结。\n\n第四，做一个上进的人，提升自己解决问题的能力。每个人都应该学会提升自己，这是保持思维活力的最佳良方。为此，一定要树立终身学习、随时学习的理念，善于发现身边值得学习的东西。提升自己不一定要脱离现在的工作，更没必要脱产走回学校——因为年龄、经济等条件不允许，我们不可能再走回纯粹的学生时代。随用随学、做有心人，留心身边的人和事，学会随时发现生活中的亮点，并注意总结别人的成功经验，拿来为自己所用，这可能是生活和工作中能让自己进步的最快的一招。也就是说，我们要做一个上进的人，不断扩大自己的视野和知识领域，并且能够有所收获；要把学习当成一生要做的功课，这样才有助于塑造一个心智丰富且具有良好世界观的聪明人。\n\n最后总结：弱者任思绪控制行为，强者让行为控制思绪。在通往破除拖延行为和习惯的路上，管理情绪是一个重要关卡。因此，只有积极乐观的人，才有立即行动的执行力。\n\n### 金句摘录\n\n> 弱者任思绪控制行为，强者让行为控制思绪。\n\n> 只有积极乐观的人才有立即行动的执行力。\n\n---\n\n## 第 0030 集｜拖延造成你的压力妥协只是挥霍时间的借口\n\n### 核心内容\n\n本集讨论拖延者面对压力时的妥协心理。现代社会，谁都无法避开越来越大的压力。面对压力，一些人产生了更强大的动力，迎着压力前进；也有一些人向压力妥协。心理学家称，高目标才能调动更高的积极性，使人们朝着目标全力以赴；而低目标则因为其低要求，使人们不愿付出高于工作的努力。后者通常会有这样的表现：面临上级交代的任务，只会敷衍了事、拖拖拉拉——这样又怎么能与那些做事果敢、效率高的人竞争呢？可见，\"压力大\"很多时候只不过是拖延者的借口而已，他们只是在高压下妥协了。\n\n那么面对妥协，我们应该怎样去做呢？第一条建议：积极主动，冲破压力。本集讲了一个故事。有一天正值放假，小芳需要值班。就在这个平凡的值班日，发生了一件意想不到的事：躺在椅子上休息的小芳，突然听到电报机滴滴答答传来一通紧急电报，吓得从椅子上跳起来。电报的内容是：附近铁路上有一列货车车头出轨，要求上司召回各班列车、改换轨道，以免发生追撞的意外惨剧。这可怎么办？现在是节假日，能下达命令的上司不在；但如果不现在决策，就会产生不可预料的恶果。时间慢慢过去，事故可能就在下一秒发生。小芳不得已只好敲下发报键，以上司的名义下达命令：调度列车立即改换轨道，因而避免了一场可能造成多人伤亡的意外事件。做完这一切之后，小芳的心里开始紧张起来——因为按当时铁路公司的规定，电报员擅自冒用上级名义发报，唯一的处分是立即革职。但她又一想，这个决定肯定是对的，于是在隔日上班时写好辞呈放在上司的桌上。令小芳奇怪的是，第二天当她站在上司办公室时，上司当着她的面将辞呈撕毁，拍拍她的肩头说：\"你做得很好，我要你留下来继续工作。记住，这世上有两种人永远在原地踏步：一种是不肯听命令行事的人，而另一种则是只听命令行事的人。幸好你不是这两种人的其中一种。\"\n\n### 金句摘录\n\n> 压力大很多时候只不过是拖延者的借口而已，他们只是在高压下妥协了。\n\n> 这世上有两种人永远在原地踏步：一种是不肯听命令行事的人，而另一种则是只听命令行事的人。\n\n---\n\n## 第 0031 集｜拖延造成你的压力妥协只是挥霍时间的借口\n\n### 核心内容\n\n本集继续给\"面对妥协怎么办\"提出第二条建议，并警示拖延式应对的后果。\n\n一个人之所以妥协，并不是能力不足和信心的缺失，而是在于平时养成了轻视工作、马虎拖延的习惯，以及对工作敷衍塞责的态度。想要克服这一点，必须改变态度：拥有诚实的态度、负责敬业的精神、积极扎实的努力，才能做好工作。\n\n第二条建议：积极寻找解决方法，立即行动。任何人都不是完美的，都不可能将所有的事做到天衣无缝；即便在规划完善的前提下，依然可能出现一些问题。这时如何看待问题、处理问题，直接考验我们的应变能力——如果能立即采取补救措施，甚至能帮我们转危为安。大多数时候，我们遇到的只是一些小问题，但却没有处理好；之所以如此，有时候是我们自乱阵脚而已。不难发现，任何一个做事高效、有时间意识的人，都有很强的处理问题的能力。事实上，工作中偶尔出现问题在所难免，焦躁、着急、焦虑都无济于事；任何难题只要从容应付，找到问题的关键所在，都能够迎刃而解。\n\n另外需要认识到：是否能处理问题、把问题的负面影响降到最小，最重要的还是看速度——速度就是效益。一旦问题产生，我们就要明白\"速度等于一切\"，一定不能拖延，而应该积极寻找问题出现的根源，还应寻求周围人的帮助，集中一切资源，着手解决问题。在我们的现实工作中，一些人在遇到压力的时候，总是采取逃离、躲避、拖延的态度：他们认为一切问题都会随着时间的流逝而解决，他们面对危机的心态通常是侥幸心理、鸵鸟政策、推卸责任、隐瞒事实。然而这种妥协的态度不仅无助于问题的解决，甚至还会加重问题。\n\n### 金句摘录\n\n> 一个人之所以妥协，并不是能力不足和信心的缺失，而是在于平时养成了轻视工作、马马虎虎拖延的习惯。\n\n> 一旦问题产生，我们就要明白速度等于一切，一定不能拖延。\n\n> 这一妥协的态度不仅无助于问题的解决，甚至还会加重问题。\n\n---\n\n## 第 0032 集｜拖延造成你的自我评价我本来就不行\n\n### 核心内容\n\n本集转向拖延的深层代价——自我评价的崩塌。我们都知道，自信是对自己的高度肯定，是成功的基石，是一种发自内心的强烈信念。相反，如果一个人总是自我怀疑，认为自己这不行那不行，那么久而久之，他便真的不行了。事实上，自我怀疑也是人们拖延行为产生的一个重要原因。\n\n在拖延者的心中，经常会有这样一些声音：\"这件事我肯定做不了\"\"我不想被嘲笑\"\"太难了，我无力应对\"。这些负面的评价让人们消极和懈怠手头上的工作，因为在他们的潜意识中，要想最大限度地逃避失败的打击，就只有拖延时间。\n\n我们不难想象，任何一个自我怀疑的人都不可能取得工作上的成就：因为他们总是在自我设限——他们认为自己在规定时间内做不到，不敢挑战更大的目标，更不敢参与人际竞争；对于别人的成功，他们也只能自怨自艾；一旦出现挫折，他们很难走出来。相反，一个人一旦有了自信之后，就会积极向上，会比别人更有执行力、更有耐挫力；当他们遇到问题的时候，也更有勇气面对。而正是这种力量，指引着他们不断走向成功。\n\n### 金句摘录\n\n> 如果一个人总是自我怀疑，认为自己这不行那不行，那么久而久之，他便真的不行了。\n\n> 在他们的潜意识中，要想最大限度地逃避失败的打击，就只有拖延时间。\n\n---\n\n## 第 0033 集｜拖延造成你的自我评价我本来就不行\n\n### 核心内容\n\n本集给出破除自我怀疑的五个具体方法。破除拖延习惯的第一步就是破除自我怀疑，那么该如何做呢？\n\n第一，正确认识自己，接纳自己。一个人要对自己的品质、性格、才智等方面有一个明确的了解，方可在生活中获得较为满意的结果。不要讨厌自己，不要因为自己羞怯就容忍自己的短处；一个人不要看不到自己的价值，只看到自己的不足，认为自己什么都不如别人、处处低人一等。\n\n第二，学会正确与人比较。拿自己的短处跟别人的长处比，只能越比越泄气、越比越自卑。一些人因为学历不如人、能力不如人，便产生\"无用\"的心理，就是这个原因造成的。\n\n第三，鼓励自己，给自己打气。也许现在你正在做一件难度很大的事，要承受来自各方面的压力，你可能怀疑自己，也想过放弃，但你必须坚持下去。在给自己制定计划的过程中，要给自己打气，最终你会看到成果。\n\n第四，屏除那些消极的习惯用语。这些消极的习惯用语一般有：\"我好无助\"\"我该怎么办\"\"我真的累坏了\"。相反，我们可以这样说来激励自己：\"忙了一天，现在心情真轻松\"\"上帝，请考验我吧\"\"我要先把自己家里弄好，我就不信我战胜不了你\"。\n\n第五，敢于挑战，高度相信自己的潜力。一个自信的人，常看到事情的光明面，他们到哪里都会光彩夺目。为此，即使现在的你依然只是一名普通的员工，但只要相信自己、拥有这样的信念，你才勇于接受更好的挑战；无论你做什么，都能有优秀的表现，都能挖掘出你意识不到的潜力。\n\n### 金句摘录\n\n> 拿自己的短处跟别人的长处比，只能越比越泄气，越比越自卑。\n\n> 一个自信的人，常看到事情的光明面，他们到哪里都会光彩夺目。\n\n---\n\n## 本篇小结\n\n本篇七集完成了拖延心理的最后一层剖析：情绪与自我评价。第 27–29 集指出，被批评后的负面暗示、对过去的悔恨、对眼前与未来的错位认知，会让人像王帅一样陷入\"庸人自扰\"的怪圈——悲观削尽了行动力，拖延又加重悲观。破解之道是管理情绪四步：梳理得失不再抱怨、把困境看作希望、从错误中学习成为果敢的行动派、终身随用随学，其纲领正是\"弱者任思绪控制行为，强者让行为控制思绪\"。第 30–31 集戳破\"压力大\"这一借口的本质——向压力妥协，小芳冒名发报化解铁路事故的故事说明：危机面前，侥幸与鸵鸟政策只会加重问题，速度就是效益，立即行动才能转危为安。第 32–33 集则触及最深的一层：拖延的尽头是\"我本来就不行\"的自我设限。破除之道从接纳自己、正确比较、自我鼓励、剔除消极用语到敢于挑战——自信不是拖延的对立面装饰，而是立即行动的前提。至此，本书前半部分对拖延的形式、怪圈、成因与心理根源的盘点全部完成。\n","outline":[{"level":2,"text":"本篇速览","id":"本篇速览"},{"level":2,"text":"第 0027 集｜拖延让你总是沉溺在悲观的情绪之中","id":"第-0027-集拖延让你总是沉溺在悲观的情绪之中"},{"level":3,"text":"核心内容","id":"核心内容"},{"level":3,"text":"金句摘录","id":"金句摘录"},{"level":2,"text":"第 0028 集｜拖延让你总是沉溺在悲观的情绪之中","id":"第-0028-集拖延让你总是沉溺在悲观的情绪之中"},{"level":3,"text":"核心内容","id":"核心内容-2"},{"level":3,"text":"金句摘录","id":"金句摘录-2"},{"level":2,"text":"第 0029 集｜拖延让你总是沉溺在悲观的情绪之中","id":"第-0029-集拖延让你总是沉溺在悲观的情绪之中"},{"level":3,"text":"核心内容","id":"核心内容-3"},{"level":3,"text":"金句摘录","id":"金句摘录-3"},{"level":2,"text":"第 0030 集｜拖延造成你的压力妥协只是挥霍时间的借口","id":"第-0030-集拖延造成你的压力妥协只是挥霍时间的借口"},{"level":3,"text":"核心内容","id":"核心内容-4"},{"level":3,"text":"金句摘录","id":"金句摘录-4"},{"level":2,"text":"第 0031 集｜拖延造成你的压力妥协只是挥霍时间的借口","id":"第-0031-集拖延造成你的压力妥协只是挥霍时间的借口"},{"level":3,"text":"核心内容","id":"核心内容-5"},{"level":3,"text":"金句摘录","id":"金句摘录-5"},{"level":2,"text":"第 0032 集｜拖延造成你的自我评价我本来就不行","id":"第-0032-集拖延造成你的自我评价我本来就不行"},{"level":3,"text":"核心内容","id":"核心内容-6"},{"level":3,"text":"金句摘录","id":"金句摘录-6"},{"level":2,"text":"第 0033 集｜拖延造成你的自我评价我本来就不行","id":"第-0033-集拖延造成你的自我评价我本来就不行"},{"level":3,"text":"核心内容","id":"核心内容-7"},{"level":3,"text":"金句摘录","id":"金句摘录-7"},{"level":2,"text":"本篇小结","id":"本篇小结"}]},{"id":"T07","title":"第0034-0037集","full":"拖延心理学 · 第 34–37 集（缺乏动力、满足现状与懒惰心理）","lect":"","dur":"8:38","sec":518,"theme":"","url":"","md":"# 拖延心理学 · 第 34–37 集（缺乏动力、满足现状与懒惰心理）\n\n> **合集**：【有声书】拖延心理学停止内耗时间管理自律自控自制（B站 UP主：勤者读书）\n> **对应集数**：第 34–35 集（拖延造成你缺乏动力不思进取而满足现状）、第 36–37 集（拖延与懒惰，如影随形）\n> **时长**：约 8.6 分钟（518 秒）\n> **本篇要点**：动力缺失 · 不思进取 · 懒惰天性 · 普瑞玛法则\n\n---\n\n## 本篇速览\n\n| 集 | 标题 | 一句话要点 |\n| --- | --- | --- |\n| 0034 | 拖延造成你缺乏动力不思进取而满足现状1 | 缺乏动力的人为薪水坐等下班，真正的救世主是自己，态度改变人生 |\n| 0035 | 拖延造成你缺乏动力不思进取而满足现状2 | 高风险社会里安于现状必被抛弃，最大的危险在自身而不在别人 |\n| 0036 | 拖延与懒惰，如影随形1 | 懒惰是天性，与拖延狼狈为奸；人生分野源于珍惜时间还是懈怠拖延 |\n| 0037 | 拖延与懒惰，如影随形2 | 用普瑞玛法则先做最讨厌的事，以强化作用纠正惰性生活方式 |\n\n---\n\n## 第 0034 集｜拖延造成你缺乏动力不思进取而满足现状1\n\n### 核心内容\n\n本集从「动力」这个概念切入。我们都知道，很多机器的运行都需要动力的推动，比如火箭升天、汽车行驶，我们日常的工作和生活同样如此。作者提出一个值得每个人思考的问题：我为什么要工作、为什么要干事业？大部分人的回答是养家糊口、供养家庭，也有一些人给出了更高层面的意义——实现自身价值。很明显，这些都是我们工作的动力。\n\n那么，一个人如果缺乏动力会怎样呢？不难想象，那就是一种不思进取的状态：他来上班就是为了坐等下班，为了每个月的薪水；工作中上级交代的任务会一再拖延，因为在他看来，今天完成和明天完成没有分别。当你问他有什么梦想和目标时，他的回答是「目标和理想能当饭吃吗」。这是一种多么糟糕的人生和工作态度，我们也不难想象，缺乏工作动力的人不会有大的成就。\n\n生活中我们常常听到一些庸庸碌碌的人感叹命运不好，他们习惯于把自己的艰难归咎于命运。但事实上，世上真正的救世主不是别人，正是你自己。你完全可以摆脱消极的想法，成为一个积极向上的人，在工作中培养自己的热忱，找到自己的目标，为现在的自己做一个准确的定位。真正改变人生的往往就是我们的态度，不思进取，最后也只能平庸。\n\n那些拖延者之所以没有大的成就，就是因为他们太容易满足而不求进取，他们参与工作只是为了挣取足够温饱的薪金。要知道，不甘于平庸、超越优秀、成为卓越者，才可以把事情做到最好。本集结尾还引用社会学专家的预测：未来的社会将变成一个复杂的、充满不确定性的高风险社会，如果人类自由行动的能力总在不断增强，那么不确定性也会不断增大——这正是不思进取者必须警醒的时代背景。\n\n### 金句摘录\n\n> 世上真正的救世主不是别人，正是你自己。\n\n> 真正改变人生的往往就是我们的态度，不思进取，最后也只能平庸。\n\n> 不甘于平庸，超越优秀，成为卓越者，就可以把事情做到最好。\n\n---\n\n## 第 0035 集｜拖延造成你缺乏动力不思进取而满足现状2\n\n### 核心内容\n\n本集承接上集关于「高风险社会」的预言展开。你应该会意识到，各种变化已经在你的身边悄然出现，勇敢投身于其中的人也越来越多。而如果你还不积极行动起来，缺乏竞争意识、忧患意识，安于现状、不思进取，那么如果你还没被惊醒的话，就会被时代抛弃，被那些敢于冒险的人远远甩在后面。\n\n作者接着从人际观感的角度对比：在我们工作的周围，为什么有些人受人敬重，有些人却被人看不起？前者是因为他们有野心，凡事努力；后者是因为他们得过且过，总是拖拖拉拉，即使掉在队伍后面也不奋起直追。这就注定了这类人无法成大事。这里所说的「有野心」，指的是一种积极向上的心态，它为所有人创造了一种前进的动力。在很多时候，成功的主要障碍不是能力的大小，而是我们的心态。\n\n由此得出本篇的总结性论断：每个人都应该明白，最大的危险不在于别人，而在于自身。如果你总是意志消沉、不思进取，那么即使曾经的你有再大的雄心和勇气，也会被一点点抹杀，最终一生碌碌无为。拖延者的问题往往不在于能力不足，而在于心气先垮掉了——动力一旦熄火，行动自然一拖再拖。\n\n所以作者呼吁：我们绝不能甘于平庸，要为自己的人生负责，做与众不同的人，你才有可能触及理想与幸福。把姿态从「坐等下班」切换为「凡事努力」，拖延便失去了滋生的土壤。\n\n### 金句摘录\n\n> 最大的危险不在于别人，而在于自身。\n\n> 成功的主要障碍不是能力的大小，而是我们的心态。\n\n> 如果你总是意志消沉，不思进取，那么即使曾经的你有再大的雄心和勇气，也会被抹杀而一生碌碌无为。\n\n---\n\n## 第 0036 集｜拖延与懒惰，如影随形1\n\n### 核心内容\n\n本集把拖延的根源进一步指向懒惰。作者指出，每个人都有懒惰的心理，这是人类的天性。可以说，一个人在可以懒惰的情况下不会不懒，只是有些人能克服自己的惰性，并以勤奋待之，最终取得成功；而有些人则任由懒惰这条又粗又长的枯藤缠着自己，阻挡自己的前进。英国地质学家史密斯曾说：如果懒惰不产生恶习或祸患，那通常也一定产生沮丧。从这句话能看出懒惰这一恶习带来的负面影响。\n\n事实上，拖延与懒惰是一对孪生兄弟，它们总是狼狈为奸，阻碍我们积极向上。人们常说人生苦短、行色匆匆，有的人青云直上、事业有成，有的人庸庸碌碌、毫无作为——这两种完全不同的人生情景，实则来源于截然不同的两种人生态度：前者珍惜时间、勤奋拼搏，后者则懈怠拖延、行动迟缓。勤奋可以使聪明之人更具实力，而相反，懒惰则会使聪明之人最终江郎才尽，成为时代的弃儿。\n\n学习是成功前进的必要元素。在当今社会，只有知识才能改变命运，只有学习才能突破，才能具备竞争力。曾经有人说，懒惰是最大的罪恶，上帝永远保佑那些起得最早的人。懒惰是现代社会中很多人的共同缺点，这些人总会为自己的懒惰找借口，而正因为如此，他们最终也丧失了很多成功的机会——因为人的一生可以有所作为的时机只有一次，那就是现在。一个人只有坚持「不找借口、找方法」的信念，才能对自己的事业有热情，不管遇到什么事，都能以办法代替借口。\n\n本集最后点出许多人的共同体验：你本来打算做某件事，但过了好久还是没有开始，或者觉得自己想去，但就是不想动手——这正是懒惰与拖延联手作用的表现，也为下一集的解决方案埋下伏笔。\n\n### 金句摘录\n\n> 如果懒惰不产生恶习或祸患，那通常也一定产生沮丧。（史密斯）\n\n> 人的一生可以有所作为的时机只有一次，那就是现在。\n\n> 一个人只有坚持不找借口找方法的信念，才能对自己的事业有热情。\n\n---\n\n## 第 0037 集｜拖延与懒惰，如影随形2\n\n### 核心内容\n\n本集给出克服惰性的具体方法——普瑞玛法则。以心理学操作性反射的原则为基础，对人类的行为方式进行观察后，心理学家提出这样一种改进方式，用来纠正惰性生活方式，并由这种惰性生活方式的结束而带来整个人生的良性改变，这就是普瑞玛法则。\n\n作者首先强调认知层面的转变：要克服惰性心理，你首先就要认识到它的负面效应。懒惰拖延并不能帮助我们解决问题，也不会让问题凭空消失，它只是一种逃避，甚至会让问题变得更严重——那么，你为什么还要逃避呢？\n\n接下来是具体操作。作者建议你有兴趣的话坚持尝试一周，按照以下方式生活，你会发现整个人都不同了。第一步，先给自己的行为做一个记录，把每天要做的所有事记录在册（吃饭穿衣这类事剔除），即便粗略记录大概也会有十几件。第二步，按照自己的兴趣将这些事排序：最讨厌的事放在第一位，最喜欢的事放在最后一位。第三步，按照所列的顺序来行动：早上一起床，就先做最讨厌的事，然后接着做第二件、第三件，到最后做的才是你最喜欢的事。\n\n这件事操作起来可能有难度，但坚持就是胜利，千万别在中途放弃转而去做你喜欢的事。为什么这样做能够帮助克服惰性呢？因为这是一种强化作用的方式：先处理困难的事情，再处理稍困难的事情，就能对前面所做的事情起到强化作用，而且强化的效果会越来越明显，直到你认为自己完全有能力掌控自己、把那件事做好。\n\n作者补充说，这是效果极好的改变惰性的方法，对于容易出现心情抑郁的人，这种方法也有助于调节心情，不过这都需要坚持去做。最后，当你真正做到能自治的时候，可以自我奖励一番，及时肯定自己，然后记录进步；在获得某种成就感之后，你会找到继续努力的动力。如果你试试并且多一些坚持，将会发现生活和工作是多么轻松有趣的事情。\n\n### 金句摘录\n\n> 懒惰拖延并不能帮助我们解决问题，也不会让问题凭空消失，它只是一种逃避。\n\n> 坚持就是胜利，千万别在中途放弃。\n\n> 在获得某种成就感之后，你会找到继续努力的动力。\n\n---\n\n## 本篇小结\n\n本篇四集揭示了拖延在「动力」与「勤奋」两个维度上的恶果与解法。第 34、35 集指出：工作动力是行动的引擎，缺乏动力的人为薪水坐等下班、任务一拖再拖，最终平庸一生；在充满不确定性的高风险社会里，安于现状就是被时代抛弃的开始，而最大的危险不在别人，恰恰在自身——改变态度，才能改变人生。第 36、37 集则把矛头指向拖延的孪生兄弟「懒惰」：懒惰是人类天性，放任它就会以借口自我麻痹、错失稍纵即逝的时机；解药是普瑞玛法则——每天从最讨厌的事做起，用「由难到易」的顺序形成行为强化，再辅以自我奖励和进步记录，坚持一周就能看到改变。一句话：动力靠自己点燃，惰性靠方法驯服，拖延才没有藏身之处。\n","outline":[{"level":2,"text":"本篇速览","id":"本篇速览"},{"level":2,"text":"第 0034 集｜拖延造成你缺乏动力不思进取而满足现状1","id":"第-0034-集拖延造成你缺乏动力不思进取而满足现状1"},{"level":3,"text":"核心内容","id":"核心内容"},{"level":3,"text":"金句摘录","id":"金句摘录"},{"level":2,"text":"第 0035 集｜拖延造成你缺乏动力不思进取而满足现状2","id":"第-0035-集拖延造成你缺乏动力不思进取而满足现状2"},{"level":3,"text":"核心内容","id":"核心内容-2"},{"level":3,"text":"金句摘录","id":"金句摘录-2"},{"level":2,"text":"第 0036 集｜拖延与懒惰，如影随形1","id":"第-0036-集拖延与懒惰如影随形1"},{"level":3,"text":"核心内容","id":"核心内容-3"},{"level":3,"text":"金句摘录","id":"金句摘录-3"},{"level":2,"text":"第 0037 集｜拖延与懒惰，如影随形2","id":"第-0037-集拖延与懒惰如影随形2"},{"level":3,"text":"核心内容","id":"核心内容-4"},{"level":3,"text":"金句摘录","id":"金句摘录-4"},{"level":2,"text":"本篇小结","id":"本篇小结"}]},{"id":"T08","title":"第0038-0044集","full":"拖延心理学 · 第 38–44 集（对失败的焦虑、决策恐惧与害怕成功）","lect":"","dur":"14:32","sec":872,"theme":"","url":"","md":"# 拖延心理学 · 第 38–44 集（对失败的焦虑、决策恐惧与害怕成功）\n\n> **合集**：【有声书】拖延心理学停止内耗时间管理自律自控自制（B站 UP主：勤者读书）\n> **对应集数**：第 38–39 集（对失败的焦虑万一失败了怎么办）、第 40–42 集（\"决策恐惧症\"人们为什么害怕决策）、第 43–44 集（在潜意识里害怕成功）\n> **时长**：约 14.5 分钟（872 秒）\n> **本篇要点**：失败焦虑 · 决策恐惧症 · 害怕成功 · 立即执行\n\n---\n\n## 本篇速览\n\n| 集 | 标题 | 一句话要点 |\n| --- | --- | --- |\n| 0038 | 对失败的焦虑万一失败了怎么办1 | 行动前先想失败，就永远不会开始；勇敢要放手去做 |\n| 0039 | 对失败的焦虑万一失败了怎么办2 | 害怕失败者的共性是否定自己、相信宿命、习惯无助；不念过往不畏将来 |\n| 0040 | \"决策恐惧症\"人们为什么害怕决策1 | 怕决策失误而事事请示上司的面试官，最终连面试都办砸了 |\n| 0041 | \"决策恐惧症\"人们为什么害怕决策2 | 新人李红主动开垦无人问津的市场，决断力赢得立足之地 |\n| 0042 | \"决策恐惧症\"人们为什么害怕决策2 | 学会决策立即执行：着眼当下、领会上级意图、当好执行者 |\n| 0043 | 在潜意识里害怕成功1 | 资深策划张晓敏害怕升职带来的压力而想拖延躲避 |\n| 0044 | 在潜意识里害怕成功2 | 恐惧的成功后之事未必发生；不断充实自己、敢于挑战成功 |\n\n---\n\n## 第 0038 集｜对失败的焦虑万一失败了怎么办1\n\n### 核心内容\n\n本集从「梦想与行动的距离」谈起。生活中，相信每个人都有自己的梦想或目标，然而最终能够达到自己目标的人却是少数。究其原因，很大一部分人都缺乏立即执行的精神。他们在行动之前就开始产生焦虑——万一失败了怎么办？正是这个念头让他们永远都不会开始，只会与目标渐行渐远。\n\n作者进一步把镜头对准现实工作场景：一些人因为害怕承担失败带来的后果，而迟迟不敢着手做手头上的事。这里揭示出一种微妙而普遍的心理——他们宁愿承认自己没有努力，也不愿承认自己能力不足。于是他们会为自己寻找各种借口，拖延到最后，就能名正言顺地不必承担失败的责任。换言之，拖延在这里成了一种自我保护：只要不说自己尽力了，失败就伤不到自尊。但代价是，事情永远停在原地。\n\n作者还点破另一种常见的自我认知错位：可能一直以来你都认为自己是个勇敢的人，但是一旦到了真正可以表现自己勇气的时候，却左右迟疑，不敢付诸实践。其实这不是真的勇敢，因为勇敢不是停留在言语上，而是要放手去做。一个人是否勇敢，不看他说了什么，而看他在关键时刻有没有迈出那一步。\n\n本集的要义可以概括为：把「万一失败了怎么办」换成「不开始才是真正的失败」。焦虑在行动之前制造出来的种种可怕图景，大多只是想象；而只要立即着手，失败与否才有机会被真实检验，目标才有被达成的可能。\n\n### 金句摘录\n\n> 他们在行动之前就开始产生焦虑，万一失败了怎么办？这样永远都不会开始，只会与目标渐行渐远。\n\n> 他们宁愿承认自己没有努力，也不愿承认自己能力不足。\n\n> 勇敢不是停留在言语上，而是要放手去做。\n\n---\n\n## 第 0039 集｜对失败的焦虑万一失败了怎么办2\n\n### 核心内容\n\n本集从研究证据出发深化「失败焦虑」。2007 年，美国卡尔加里大学的教授发现，人的拖延行为的产生与害怕失败有一定的关联。有意思的是，同样面对失败的可能，有一些人因为害怕失败而立即行动起来，另一些人却因此而选择逃避和拖延。更为深入的是，一些心理学家还对那些因为害怕失败而产生拖延行为的人做了心理评估。经过评估，心理学家发现他们都有几点共性：否定自己，相信宿命，习惯无助。很明显，这些都是消极的心理症状。被这些负面情绪缠绕，怎么会有快乐可言呢？\n\n作者的论证很直白：虽然立即实行的后果可能是失败，但拖延本身也是失败，为什么不放手一搏呢？最重要的是，很多时候事情并没有我们想象的那么糟糕，甚至只是我们杞人忧天而已。有时候我们对某件事很担心，但只要转念一想，最好的状况莫过于以这样的心态去面对，其实就没有什么可担心的了。\n\n本集引用尼采的话：世间之恶的四分之三，皆出自恐惧。是恐惧让你对过去经历的事情苦恼，然后惧怕未来即将发生的事。的确，我们只要做到不念过往、不畏将来，就能变得很勇敢。很多时候，消除恐惧的方法只是做个痛快的决定，只要想做，并且坚信自己能成功，那么你就能做成。消除焦虑、立即行动乃至获得成功的钥匙，就掌握在自己手中，只要我们积极主动一点，幸福与快乐就触手可及。\n\n结尾再次回到做事心态：一些人总是担心失败后的情况，因此产生了不必要的焦虑和拖延行为。但实际上，我们谁也不必去预料明天，我们要做的就是把握当下。\n\n### 金句摘录\n\n> 世间之恶的四分之三，皆出自恐惧。（尼采）\n\n> 只要我们做到不念过往，不畏将来，就能变得很勇敢。\n\n> 我们谁也不必要去预料明天，我们要做的就是把握当下。\n\n---\n\n## 第 0040 集｜\"决策恐惧症\"人们为什么害怕决策1\n\n### 核心内容\n\n本集引入一个新概念——决策恐惧症。生活中，我们经常要面临两难的抉择，尤其是在现今这个信息多而乱的社会中，做出正确的抉择更不是一件易事，这就需要我们有出色的判断能力。然而，一些人因为害怕做出错误的抉择而左右迟疑、当断不断、不愿实施，为自己带来很多困扰。我们将这种人称为「决策恐惧症者」，因为害怕决策，他们经常拖延。\n\n作者用李芳面试的故事说明这种症状的破坏力。李芳经人引荐去一家待遇较好的时尚杂志面试文字编辑一职，为此她精心修饰了一番，白衬衣、粉红套装、短裙，打扮得很漂亮，出门前家人都认为她这份工作肯定没问题了。但中午的时候李芳就回家了，却是一副沮丧样。原来问题出在面试官身上，可以说李芳是被牵连的。她和另外几位应聘者一样都带上了自己的文稿，但这几篇文稿文笔相当，难分高下。这位面试官好像是个有决策恐惧症的人，思索再三以后，他告诉几位面试者：你们稍等一下，过会儿给你们面试的结果。然后他就去了主编办公室。李芳透过办公室的玻璃看到主编发脾气的情形，还听到了这样几句话：每次让你拿主意的时候，你都来问我，那我请你回来工作干什么？算了，这次的面试取消，过几天我自己来处理，让他们都回去吧。面试官从主编办公室出来后对大家说：实在不好意思，我想大家应该都听到了，希望你们能找到一份好工作。\n\n作者分析指出，这位面试官因为害怕决策而请教主编，什么事都劳烦上司，自然会让上司不快。但职场中很多人都和这位面试官一样，他们之所以害怕决策，是担心决策失误，于是常常将决策权交给上司。最终的结果就是上司的工作量明显增加，久而久之，他们变成了上司除之而后快的累赘。\n\n### 金句摘录\n\n> 每次让你拿主意的时候，你都来问我，那我请你回来工作干什么？\n\n> 因为害怕决策，他们经常拖延。\n\n---\n\n## 第 0041 集｜\"决策恐惧症\"人们为什么害怕决策2\n\n### 核心内容\n\n本集给出决策恐惧症的正面对照案例。与上集那些事事请示的下属相反，也有一些聪明的下属，他们深知上司日理万机，在一些琐碎的事件上懂得自己拿主意并立即执行，为上司免除了不少烦恼，这样的人更容易获得信任。\n\n作者讲述了新人李红的故事。李红毕业以后，误打误撞进了现在的这家公司，从事产品销售的工作。可能是年少轻狂，也可能是信心十足，李红面对这份工作表现出了极大的热情。这天上司让他去一个地方开发市场，那个地方十分偏僻。上司曾经把这个任务派给过三个人，但都被他们推脱掉了，因为他们一致认为那个地方根本不会有市场，即便是去了也是徒劳。但李红不这么想，他认为：如果自己能开辟出这片市场，那么即使自己还是个新人，在公司也能站稳脚跟，还能给领导留下个好印象。于是他出发了。\n\n令同事们感到惊讶的是，三个月后，疲惫的李红回到了公司，带回了好消息——那里潜在的市场很大。其实，李红在出发之前也认定公司的产品在那个偏僻的地方会没有销路，但基于坚决的服从意识，他还是毅然前往，并用尽全力去开拓市场，最终取得了成功。\n\n作者总结说，李红这种决断力是我们所必须学习的：无论什么时候，都应该主动积极地完成领导交给你的任务，这是执行的第一步。任何一个领导都不会喜欢做事犹豫不决、迟迟不动手、问长问短的下属。敢于自己拿主意、敢于立即行动的人，才会在职场中积累起自己的信用与机会。\n\n### 金句摘录\n\n> 深知上司日理万机，在一些琐碎的事件上懂得自己拿主意并立即执行，这样的人更容易获得信任。\n\n> 无论什么时候，都应该主动积极地完成领导交给你的任务，这是执行的第一步。\n\n---\n\n## 第 0042 集｜\"决策恐惧症\"人们为什么害怕决策3\n\n### 核心内容\n\n本集正面回答「怎样学会决策、立即执行」，给出三条方法。\n\n其一，着眼于当下的工作。作者讲了一群年轻人寻找快乐的故事：一群年轻人到处寻找快乐，却遇到许多烦恼、忧愁和痛苦，他们向老师苏格拉底询问快乐到底在哪里。苏格拉底说，你们还是先帮我造一条船吧。年轻人暂时把寻找快乐的事放到一边，找来造船的工具，用了七七四十九天，砍倒了一棵又高又大的树，挖空树心，完成了一条独木船。独木船下水了，年轻人把老师请上船，一边合力荡桨，一边齐声唱起歌来。苏格拉底问：孩子们，你们快乐吗？学生齐声回答：快乐极了。苏格拉底道：快乐就是这样，它往往在你忙于做别的事情时突然来访。——专注当下之事，烦恼自会退场。\n\n其二，准确领会上级的意图，做出正确的决策。「失之毫厘，谬以千里」这句话用在职场执行任务上再贴切不过。这里所说的领导意图，是上级领导在布置工作、下达任务、做出指示时的本意、希望达到的目标和效果，它是组织工作的出发点和归宿。事实证明，只有真正领会领导的意图，才能将任务执行得准确到位。作者同时提醒：烦恼的产生，很多时候都是因为过多思考；无论做了何种决策，都会存在失败的风险，但也同时有成功的可能。一味地拖延、让他人替你决策，你的执行力也永远只能原地踏步。\n\n其三，对于已经做好的决策，我们只需要充当执行者，而不是决策者。即使你在企业的职位再高，只要你不是老板，都要记住一点：你是协助领导完成工作的人，而不是制定决策的人。对于领导的决定，你可能觉得不是很完美，甚至完全否定，但当你建议无效时，也应该放弃自己的意见，全心全力去执行上司的决定。执行中发现领导的决定是错误的，你所需要做的也是唯一该做的，就是尽可能将这项错误造成的损失降到最低。\n\n### 金句摘录\n\n> 快乐就是这样，它往往在你忙于做别的事情时突然来访。（苏格拉底）\n\n> 一味的拖延，让他人为你决策，你的执行力也永远只能原地踏步。\n\n---\n\n## 第 0043 集｜在潜意识里害怕成功1\n\n### 核心内容\n\n前面我们已经分析过，一些人因为害怕失败而迟迟不动手，这情有可原。但心理学专家在分析拖延的心理因素时指出，另一些人会因为害怕成功而拖延。也许你会认为这也太荒谬了，简直是在开玩笑。可事实上，这种情形确实存在：很多人在潜意识中的确对成功有着恐惧，也正是因为这种恐惧的存在，让他们不敢行动，最终与成功擦肩而过。只不过，人们对成功产生恐惧的理由因人而异。\n\n作者用张晓敏的故事加以说明。张晓敏五年以前就在这家策划公司工作了，是一名资深员工。她能力出众、待人温和，几乎所有的同事和领导都喜欢她。在最近的人事变动中，领导决定让她担任策划总监。从一名策划升到策划总监，这确实是值得庆贺的事情。这天中午，同事兼好友王璀把她约到咖啡厅，想当面道喜，还故意改变以往说话的口吻说：恭喜你呀，张总监。没想到张晓敏叹了口气：有什么开心的，愁死我了。王璀纳闷了：升职了应该高兴啊，别人盼还盼不来呢，有什么可愁的？\n\n张晓敏道出了心里话：我根本就不想升职、不想加薪。就现在这样当个策划，我都觉得压力大，有做不完的事情；要是再当个总监，我还要做更多的事、承受更大的压力，恐怕一点自己的空间都没有了。再说万一做不好呢？公司里有个跟我实力相当的人，一直在觊觎这个职位，我应付不来这个工作的话，他们更有理由找茬了。另外，我本来就是个不喜欢与人争抢的人，也应付不了每天对下属指指点点的管理。一旦成了总监，大概每天都会有人在议论我，就连我穿了什么衣服、剪什么发型，估计都会成为大家的谈资，被人始终盯着的滋味实在不好受。\n\n王璀问：那你准备怎么做？任职命令可是已经下达了呀。张晓敏的回答是：能怎么办，躲着呗，能拖就拖。接下来的几天我都不来公司，请上几天假，就说自己不舒服。公司这几天正是缺人手的时候，我关键时候掉链子，高层肯定觉得我不能担当大任，自然会找人替代我。这番话让王璀沉思半天：人们都只看到别人成功前的荣耀，却没有看到他们身后的牺牲和压力。不过，因为害怕成功就讨厌升职、拖延躲避，这样做真的正确吗？答案留待下一集揭晓。\n\n### 金句摘录\n\n> 很多人在潜意识中的确对成功有着恐惧，也正是因为这种恐惧的存在，让他们不敢行动，最终与成功擦肩而过。\n\n> 人们都只是看到别人成功前的荣耀，却没有看到他们身后的牺牲和压力。\n\n---\n\n## 第 0044 集｜在潜意识里害怕成功2\n\n### 核心内容\n\n对于上集末尾的疑问——因为害怕成功就躲避升职，这样做正确吗——本集给出肯定的回答：当然不正确。一个人对自己缺乏自信、害怕成功，只会导致他停滞不前，把自己禁锢在牢笼中。其实很多时候，你所恐惧的成功后的事情，并不一定会发生；即便发生，也远没有你想象的那么可怕。作者给出一个可操作的自我检验方法：现在你不妨将成功后的好处和坏处分别列出来，就会发现你的担心简直是无聊至极。\n\n作者接着描绘职场中的两种极端面孔。一种人总是抱怨自己怀才不遇，一遇到可以表现自己的机会，就急不可耐地站出来，结果给领导留下爱表现的坏印象。另一种人则相反：他们能力突出，却害怕成功，即便机遇已经摆在面前，依然选择拖延和逃避，宁愿每天得过且过混日子。后者的代价是双重的——不但迷失了个人奋斗目标，而且对公司的影响也是负面的，因为他们总是不断被周围的新人赶上甚至超越。很明显，这两种工作态度都是不对的。\n\n那么我们该怎样做呢？作者指出，其实无论是身处职场还是做其他事，任何时候都不能停止进步。要知道，随着知识技能折旧得越来越快，不断学习、不断更新知识，已经成为让自己「保鲜」的一个重要方法。是否能适应激烈的竞争环境并不断完善自己，已经成为一个职场人能否担当大任的重要考核因素。\n\n因此结论是：只有努力充实自己，敢于向成功挑战，才会真正进步。成功本身不是需要恐惧的负担，而是需要用实力去承接的机会；把焦虑的时间用来学习和行动，害怕成功的心结自然会被打开。\n\n### 金句摘录\n\n> 一个人对自己缺乏自信，害怕成功，那么只会导致他停滞不前，把自己禁锢在牢笼中。\n\n> 你所恐惧的成功后的事情，并不一定会发生；即便发生，也远没有你想象的那么可怕。\n\n> 只有努力充实自己，敢于向成功挑战，才会真正进步。\n\n---\n\n## 本篇小结\n\n本篇七集围绕「焦虑与恐惧」这条主线，解剖了拖延最深的三层心理根源。第 38、39 集处理对失败的恐惧：害怕失败者宁愿承认没努力也不愿承认能力不足，用拖延为失败预设台阶，而心理评估揭示他们的共性是否定自己、相信宿命、习惯无助——解药是尼采式的「不念过往、不畏将来」，做个痛快的决定，把握当下。第 40 至 42 集剖析「决策恐惧症」：怕错就上交决策权，结果成为上司的负担；反面是李红式的决断力与苏格拉底造船的专注当下，以及「领会意图、当好执行者」的职场执行之道。第 43、44 集揭示最反直觉的一层——潜意识里害怕成功：升职的机会反而让人想请假躲避。破除之道是把成功后的得失列在纸上冷静检视，不断学习充实自己，敢于向成功挑战。从怕失败、怕决策到怕成功，拖延的本质始终是恐惧对行动的绑架，而钥匙始终握在自己手中。\n","outline":[{"level":2,"text":"本篇速览","id":"本篇速览"},{"level":2,"text":"第 0038 集｜对失败的焦虑万一失败了怎么办1","id":"第-0038-集对失败的焦虑万一失败了怎么办1"},{"level":3,"text":"核心内容","id":"核心内容"},{"level":3,"text":"金句摘录","id":"金句摘录"},{"level":2,"text":"第 0039 集｜对失败的焦虑万一失败了怎么办2","id":"第-0039-集对失败的焦虑万一失败了怎么办2"},{"level":3,"text":"核心内容","id":"核心内容-2"},{"level":3,"text":"金句摘录","id":"金句摘录-2"},{"level":2,"text":"第 0040 集｜\"决策恐惧症\"人们为什么害怕决策1","id":"第-0040-集决策恐惧症人们为什么害怕决策1"},{"level":3,"text":"核心内容","id":"核心内容-3"},{"level":3,"text":"金句摘录","id":"金句摘录-3"},{"level":2,"text":"第 0041 集｜\"决策恐惧症\"人们为什么害怕决策2","id":"第-0041-集决策恐惧症人们为什么害怕决策2"},{"level":3,"text":"核心内容","id":"核心内容-4"},{"level":3,"text":"金句摘录","id":"金句摘录-4"},{"level":2,"text":"第 0042 集｜\"决策恐惧症\"人们为什么害怕决策3","id":"第-0042-集决策恐惧症人们为什么害怕决策3"},{"level":3,"text":"核心内容","id":"核心内容-5"},{"level":3,"text":"金句摘录","id":"金句摘录-5"},{"level":2,"text":"第 0043 集｜在潜意识里害怕成功1","id":"第-0043-集在潜意识里害怕成功1"},{"level":3,"text":"核心内容","id":"核心内容-6"},{"level":3,"text":"金句摘录","id":"金句摘录-6"},{"level":2,"text":"第 0044 集｜在潜意识里害怕成功2","id":"第-0044-集在潜意识里害怕成功2"},{"level":3,"text":"核心内容","id":"核心内容-7"},{"level":3,"text":"金句摘录","id":"金句摘录-7"},{"level":2,"text":"本篇小结","id":"本篇小结"}]},{"id":"T09","title":"第0045-0047集","full":"拖延心理学 · 第 45–47 集（你真的享受拖延带来的劣质快感吗）","lect":"","dur":"6:44","sec":404,"theme":"","url":"","md":"# 拖延心理学 · 第 45–47 集（你真的享受拖延带来的劣质快感吗）\n\n> **合集**：【有声书】拖延心理学停止内耗时间管理自律自控自制（B站 UP主：勤者读书）\n> **对应集数**：第 45–47 集（你真的享受拖延带来的劣质快感吗）\n> **时长**：约 6.7 分钟（404 秒）\n> **本篇要点**：寻求刺激 · 劣质快感 · 现在就办 · 立即处理\n\n---\n\n## 本篇速览\n\n| 集 | 标题 | 一句话要点 |\n| --- | --- | --- |\n| 0045 | 你真的享受拖延带来的劣质快感吗1 | 拖延者享受的是deadline前的焦虑感，不是工作快感；立即处理才是省时之道 |\n| 0046 | 你真的享受拖延带来的劣质快感吗2 | 市场部经理米勒靠「现在就办」与按重要性排序，少加班却多做完了工作 |\n| 0047 | 你真的享受拖延带来的劣质快感吗3 | 做事没有捷径；比别人先着手就赢得更多时间，踏实才能抓住稳重的幸福 |\n\n---\n\n## 第 0045 集｜你真的享受拖延带来的劣质快感吗1\n\n### 核心内容\n\n在工作中，我们常常听到一些领导鼓励下属：「有压力才会有动力。」诚然，在某些压力下，人们能挖掘自身潜力，但如果你是一名拖延者，你绝不能以此作为拖延的理由。你可能会以为，将工作拖到最后、在剩下几个小时的时间内加班，能让自己聚精会神、效率非常好；你认为这是一件非常刺激的事。但你最后完成的工作成果真的能让你感到满意吗？你也真的能在规定时间内完成吗？万一出现突发状况怎么办？这三个反问，正是压轴式冲刺经不起推敲的地方。\n\n美国特拉华州大学的心理学家在研究人们拖延产生的心理原因时，提出了一个名词——「寻求刺激」。他们认为，一些人会享受拖延带来的劣质快感，这些人喜欢在高压下做事，每当他们肾上腺素上升的时候，就感觉十分刺激。那事实又是如何呢？其实这些人根本不可能很好地完成任务。作者进一步戳破这种快感的真相：很多时候，人们真正享受的并不是集中精神工作的快感，而是在剩余不多时间内的焦虑感。他们并没有把自身内在的潜力逼出来，通常只是草草结束手上的工作。也就是说，所谓「压力带来动力」在拖延者身上往往是幻觉，肾上腺素掩盖的是仓促与粗糙。\n\n那么我们该如何拒绝这种劣质的快感呢？答案其实朴素得惊人：节省时间的最好方法就是立即处理、拒绝拖延。事实上，无论是谁，如果不改掉拖延的毛病，都必须要承受一定的代价——赶工的疲惫、质量的滑坡、突发状况下的崩溃，都是这份代价的不同形态。所以，为何不立即动手、踏踏实实地工作呢？相信那时你享受的，才是充实的快乐。与高压之下的焦虑相比，这种快乐不靠肾上腺素支撑，而来自从容完成工作的掌控感，它才是值得追求的「优质快感」。\n\n### 金句摘录\n\n> 一些人会享受拖延带来的劣质快感，这些人喜欢在高压下做事。\n\n> 人们真正享受的并不是集中精神工作的快感，而是在剩余不多时间内的焦虑感。\n\n> 节省时间的最好方法就是立即处理，拒绝拖延。\n\n---\n\n## 第 0046 集｜你真的享受拖延带来的劣质快感吗2\n\n### 核心内容\n\n本集通过一个职场转型案例，示范摆脱劣质快感之后的高效状态。米勒是一家外企的市场部经理，他的工作直接或间接地影响到市场部乃至全公司的业务。他总是忙得不可开交，想找点时间度假都非常困难，可是他的工作却从来没有干完过。于是他接受了一位效率专家的建议，从此，他的时间变得宽裕多了。\n\n米勒这样描述自己的改变：现在我不再加班工作了。我每周工作五十至五十五个小时的日子已经一去不复返，也不用把工作带回家做了。我在较少的时间里做完了更多的工作，按保守的说法，我每天完成与过去同样的任务后，还能剩余一个小时。对他帮助最大的一点，是「现在就办」的概念。他使用的最重要的方法是制定每天的工作计划：根据各种事情的重要性安排工作顺序，有意识地尽力克服工作上的拖拉现象——首先完成第一号事项，然后再去进行第二号事项。过去则不是这样，他那时往往将重要事项留到有空的时候去做，没有认识到次要的事项竟占用了他的全部时间。现在他把次要事项都放在最后处理，即使这些事情完不成，他也不用担忧。他感到非常满意，同时能够按时下班，而不会心中感到不安。\n\n作者由此评论：人类的天性中有很多缺点，成功者之所以成功，就是因为他们多半能克服这些缺点，反之则沦为平庸者。当然，任何习惯的改变都相当困难，它意味着不适与阵痛，这些不好的天性中就包括拖延。\n\n接着作者列举了拖延造成不良后果的常见场景，唤起读者共鸣：某天你因为拖延必须加班，自认为策划案充满创意，第二天把做好的、自以为完美的工作交上去，谁知道被领导一顿痛批，只好重新来过；周一早上你很晚才起来，急匆匆吃完早饭，拿起公文包就往公司赶，到了公司才发现一份重要的文件落在了家里；身为学生的你，每周末总是到晚上才开始准备周一要交的作业，结果因为时间不够只好抄袭其他人的，学习成绩总是不能提高。在这些反反复复的过程中，你失去的是什么？当然是宝贵的时间。\n\n### 金句摘录\n\n> 对他有极大帮助的一点是「现在就办」的概念。\n\n> 次要的事项竟占用了他的全部时间。\n\n> 任何习惯的改变都相当困难，它意味着不适与阵痛。\n\n---\n\n## 第 0047 集｜你真的享受拖延带来的劣质快感吗3\n\n### 核心内容\n\n本集以一个思想实验收束本篇。我们再来做个假设：每天早上早起一个小时，安排好一天的工作和生活，吃个早饭，锻炼好身体，精神抖擞地去上班——你会发现你充满了精力，即便平时看起来难做的工作，好像也变得轻松了许多。认真工作的结果就是你节省了时间，得到上级和同事的信任。与匆匆忙忙、一团糟的生活相比，你更倾向哪一种呢？这个对比鲜明地展示了「先着手」与「拖延赶工」两种人生的质感差异。\n\n作者强调拖延的代价绝不只停留在某一件事上：拖延的毛病容易给人带来麻烦，不但影响你的学习成绩、升学考试、就业升职，还有可能给人们的生活带来不幸。浪费时间就是耗费生命；同一件事，拖延者所花费的时间远比立即行动者多得多。拖延从表面上看似乎不是什么大毛病，但若不及时纠正，会直接影响到我们的一生。\n\n一位父亲告诫他的孩子说：无论你以后做什么样的工作，都要做到勤奋努力、全力以赴。要是你能做到这一点，你就不必担忧自己没有好前途。你看这世界上到处都是散漫粗心的人，做事善始善终的人是供不应求、深受欢迎的。只有认认真真做事的人，才是未来竞争的成功者。这位父亲的话是有道理的：一个人的成功并不在于他做什么，而在于他有没有做到最好、最到位。成功者之所以成功，就是因为他们具备一个品质——比别人起得早、睡得晚。因此，我们在学习、生活和工作中，应该以更高的标准要求自己；比别人先着手，就赢得了更多的时间。\n\n所以，任何一个企图从拖延中获得快感的人，都要认清一点：做任何事都没有捷径。不妨学习那些本本分分工作的人——不迟到、不早退、不磨洋工，上班了立即动手做事，下班了踏踏实实享受快乐。这样的态度虽然看起来并不刺激，但却能抓住踏踏实实、稳重的幸福；长此以往，你的能力也会获得质的提升。\n\n### 金句摘录\n\n> 浪费时间就是耗费生命。\n\n> 做事善始善终的人是供不应求，深受欢迎的。\n\n> 比别人先着手，就赢得了更多的时间。\n\n---\n\n## 本篇小结\n\n本篇三集合力拆穿了拖延最诱人的伪装——「压力带来动力的刺激感」。第 45 集借助美国特拉华州大学心理学家的「寻求刺激」概念指出：拖延者在最后时刻体验到的并非工作快感，而是剩余时间不多时的焦虑感，结果是草草收场、成果粗糙，拒绝劣质快感的唯一办法就是立即处理。第 46 集给出正面样板：市场部经理米勒用「现在就办」和按重要性排序的每日计划，反而比每周五十五小时的加班时代产出更多、下班更安心；而加班赶工、忘带文件、抄袭作业这些反复上演的狼狈，消耗的正是宝贵时间。第 47 集把视角拉长到一生：拖延影响学业、升职乃至生活幸福，浪费时间就是耗费生命；成功者的品质不过是比别人起得早、睡得晚、先着手。三集的结论朴素而有力——做事没有捷径，踏实不刺激，却能换来稳重的幸福与能力的质的提升。\n","outline":[{"level":2,"text":"本篇速览","id":"本篇速览"},{"level":2,"text":"第 0045 集｜你真的享受拖延带来的劣质快感吗1","id":"第-0045-集你真的享受拖延带来的劣质快感吗1"},{"level":3,"text":"核心内容","id":"核心内容"},{"level":3,"text":"金句摘录","id":"金句摘录"},{"level":2,"text":"第 0046 集｜你真的享受拖延带来的劣质快感吗2","id":"第-0046-集你真的享受拖延带来的劣质快感吗2"},{"level":3,"text":"核心内容","id":"核心内容-2"},{"level":3,"text":"金句摘录","id":"金句摘录-2"},{"level":2,"text":"第 0047 集｜你真的享受拖延带来的劣质快感吗3","id":"第-0047-集你真的享受拖延带来的劣质快感吗3"},{"level":3,"text":"核心内容","id":"核心内容-3"},{"level":3,"text":"金句摘录","id":"金句摘录-3"},{"level":2,"text":"本篇小结","id":"本篇小结"}]},{"id":"T10","title":"第0048-0052集","full":"拖延心理学 · 第 48–52 集（借口：拖延的挡箭牌与口是心非）","lect":"","dur":"11:50","sec":710,"theme":"","url":"","md":"# 拖延心理学 · 第 48–52 集（借口：拖延的挡箭牌与口是心非）\n\n> **合集**：【有声书】拖延心理学停止内耗时间管理自律自控自制（B站 UP主：勤者读书）\n> **对应集数**：第 48–50 集（借口总是拖延的挡箭牌）、第 51–52 集（所有的拖延借口都是会被识破的口是心非）\n> **时长**：约 11.8 分钟（710 秒）\n> **本篇要点**：借口与责任 · 懒惰的遮羞布 · 口是心非 · 设定期限立即行动\n\n---\n\n## 本篇速览\n\n| 集 | 标题 | 一句话要点 |\n| --- | --- | --- |\n| 0048 | 借口总是拖延的挡箭牌1 | 借口是责任的天敌，掩盖懒惰换来一时安逸，却让人疏于努力 |\n| 0049 | 借口总是拖延的挡箭牌2 | 员工徐翔五年拿工伤当借口拖延，最终与主任对骂、被迫辞职 |\n| 0050 | 借口总是拖延的挡箭牌3 | 剔除借口的三个努力方向：克服懒惰、端正态度直面责任、没有借口立即行动 |\n| 0051 | 所有的拖延借口都是会被识破的口是心非1 | 借口改变不了拖延的后果，多是自欺欺人的自我束缚 |\n| 0052 | 所有的拖延借口都是会被识破的口是心非2 | 商场、考场、职场都拖不起；拖延像癌细胞般侵蚀自信自尊 |\n\n---\n\n## 第 0048 集｜借口总是拖延的挡箭牌1\n\n### 核心内容\n\n本集开宗明义地建立「责任感」与「借口」的对立关系。人生在世，每个人都必须具备责任感，这不仅是对他人的负责，也是对自己的负责，而借口与托辞则是责任的天敌。然而在我们的生活中，总是为自己的拖延行为找借口的人到处都是，这就是不负责任的表现。当他们接收到任务以后，并不是立即主动地处理，而是不断地拖延，并为自己的拖延找借口，致使工作无绩效、业务荒废。可想而知，这样的人怎么可能有工作和事业上的突破？\n\n作者列举了借口的高发句式：因为我资源不足，所以我做不了；我没有完成这些工作，是因为这段时间太忙；我没有做好，是因为我从来没有接受过这方面的培训；如果其他人能更好地配合我的话，我想我会完成的……无所不在的借口像空气一样弥漫在我们周围，借口变成了拖延的一面挡箭牌。事情一旦没完成，就能找出一些冠冕堂皇的借口，以换得他人的理解和原谅。\n\n找到借口的「好处」是能把自己的懒惰掩盖，心理上得到暂时的平衡。但作者随即点出这笔交易的真实价格：长此以往，因为有各种各样的借口可找，人就会疏于努力，不再想方设法争取成功，而把大量的时间和精力放在如何寻找一个合适的借口上。也就是说，借口不但没有节省精力，反而开辟了一条消耗精力的歧路。\n\n结论是明确的：有命令就要去执行，这是我们每个人都应该遵循的做事准则。因为懒惰，你的那些借口能为你带来一时的安逸、些许的心灵慰藉，但是却会让你付出更昂贵的代价。一时的安逸与长远的代价之间，拖延者往往只看到了前者。\n\n### 金句摘录\n\n> 借口与托辞则是责任的天敌。\n\n> 无所不在的借口像空气一样弥漫在我们周围，借口变成了拖延的一面挡箭牌。\n\n> 借口能为你带来一时的安逸，些许的心灵慰藉，但是却会让你付出更昂贵的代价。\n\n---\n\n## 第 0049 集｜借口总是拖延的挡箭牌2\n\n### 核心内容\n\n本集用徐翔的故事展示「借口依赖症」如何一步步毁掉一个人的职业生命。徐翔是某机械公司的员工，已经有五年的工作经验。五年来，他一直与单位的同事相处融洽，与领导也相安无事。可是这几天他却失控了，居然与领导拍桌对骂。其实对这一点，同事和领导都没觉得意外，因为徐翔对待工作实在是太马虎了，无论做什么事都是一拖再拖，经常还会耽误其他人的工作。\n\n其实原来的徐翔并不是这样的，他的改变是从一次意外事故后开始的。那天徐翔上夜班，可能是因为太困了，一不小心从架子上摔了下来。幸亏架子不高，腿只是轻微骨折，到现在走路也看不出异样。然而从那以后，领导安排徐翔做什么事，他都借口自己的腿不方便。毕竟是因为工作出的意外，领导也不好再说什么。然而时间久了，领导对他也有了意见。\n\n矛盾在一个早晨爆发。一天，他还是和往常一样，比正常上班时间晚了半个小时才到单位，刚到就接到主任电话，安排他随兄弟部门的车下乡去一趟。于是原本准备上楼的他就在单位门口等车，可一个多小时过去了，也没见到车的影子。他给主任打电话才知道，下乡的车早就开走了。主任质问：那你为什么迟到呢？徐翔赶紧来到主任办公室想当面解释清楚，主任却说：今天你必须得去，要不就自己坐公共汽车去吧。徐翔的怒火腾地一下窜得老高——这明摆着是在惩罚自己，而自己错在哪儿了呢？「我不去。」他冷冷地说。主任猛地一拳捶在桌上，咬牙切齿地说：今天你去也得去，不去也得去。徐翔气急了，也砸了一下桌子。这一瞬间，主任吃惊地望着徐翔，办公室外也挤满了来看热闹的人。\n\n从这件事以后，主任有意冷落徐翔，把办公室能处理的事情都交给别人做。这让徐翔寝食难安，最后只好辞职，因为这家公司他确实待不下去了。一个「腿不方便」的借口用久了，最终把五年积累的职业关系全部耗尽。\n\n### 金句摘录\n\n> 无论如何都一拖再拖，经常还会耽误其他人的工作。\n\n> 一个借口用久了，失去的是别人的信任与自己的立足之地。\n\n---\n\n## 第 0050 集｜借口总是拖延的挡箭牌3\n\n### 核心内容\n\n本集在故事之后进行机制剖析与方案总结。在做事的过程中，经常找借口的后果就是逐渐养成拖延的坏习惯。初始阶段，也许你会有点自责；但随着拖延次数的增加，你会变得盲目，甚至到最后，你也认为自己做不到的原因，正是借口中所说的那个原因。这是借口最可怕之处——它不仅骗过别人，最终还会骗过自己，把托辞内化成自我认知。\n\n回看徐翔的故事：他总是拿曾经因公受伤这一借口拖延工作，因为拖延，也与领导产生了矛盾，最终只得辞职离开。作者由此向普通读者发出三连问：处在平凡岗位的人们，或许你经常感叹为什么成功的机遇总是不光顾你，为什么领导不愿意让你担当重大事件的处理工作，为什么同事们不愿意信任你？不妨从现在开始反省一下，自己是否有拖延找借口的习惯。如果有，那就彻底把借口从你人生的字典中永远剔除。\n\n具体要从三个方面努力。第一，克服懒惰，选择行动。一个人之所以懒惰，并不是因为他的能力不足和信心缺失，而是在于平时养成了轻视工作、马虎拖延的习惯，以及对工作敷衍塞责的态度。要想克服懒惰，必须要改变态度，以诚实的态度、负责敬业的精神、积极扎实的努力才能做好工作。第二，端正态度，直面责任。积极高昂的态度能够使你集中精力完成自己想要完成的东西，在工作中应该始终保持平常心态；在任何时候，工作和责任始终捆绑在一起，工作越重要，责任越大，没有工作也就无所谓责任，所以要敢于负责。第三，没有借口，立即行动。工作的最终目的就是把工作做好、实现最大的效益，任何的借口和拖延都将成为工作的敌人。工作的选择、工作的态度、工作的热情，都建立在立即工作和立即行动之上——只有行动，才会让这一切变成现实。\n\n### 金句摘录\n\n> 随着拖延次数的增加，你会变得盲目，甚至到最后，你也认为自己做不到的原因，正是借口中所说的原因。\n\n> 彻底把借口从你人生的字典中永远剔除。\n\n> 只有行动，才会让这一切变成现实。\n\n---\n\n## 第 0051 集｜所有的拖延借口都是会被识破的口是心非1\n\n### 核心内容\n\n本集揭示借口的第一个真相：口是心非、自欺欺人。对于那些拖延者来说，也许他们最喜欢做的事，就是对监督自己的人解释自己为什么没有完成任务。这些借口名目繁多。作者举了一个学生都熟悉的例子：假期结束之前你要交一篇论文，但整个假期你一想要写论文就心烦，于是不断地拖延，等了好多个明天，直到最后也没写出来。交论文的时候，你只能对指导老师说：我本来写好了的，但是被狗撕坏了；我用笔记本写的，但是却忘记保存了；最后因为停电丢失了。看，我们给他人的解释与自己内心的真实想法，明显是不同的。可见，拖延很容易让人陷入口是心非的陷阱中；当然，别人也会看出我们的借口，所以很多时候，借口只是在自欺欺人而已。\n\n第一个需要认清的事实是：你因拖延而产生的后果，并不会因为借口而发生改变。在做某件事的过程中，经常会出现一些状况。在拖延者看来，这些障碍就是阻止他们完成任务的借口；他们最终拖延了任务的提交时间，却不反省，也不认为是自己的责任，反而义正言辞地认为：如果没有这些障碍，自己可以做得很好。然而这些借口真的能为你免除责任吗？那些从来都准时上下班、顺利完成任务的人，难道就没有遇到过障碍吗？区别在于，他们做得不够好的时候，只会寻找自身的原因，而不是找借口。\n\n心理学家经过分析还发现一个惊人的事实：很多人并不认为自身是拖延和失败的根源，反而认为是失败导致了自身问题的存在。比如：「如果我不是这么害羞，我相信会有人喜欢我的，交朋友对于我来说实在是一件困难的事情。」再比如：「不是我的错，我没有做成这件事是因为其他事妨碍了我。」很明显，这些借口都是人们对自己的束缚，更是他们强加到自己身上的枷锁。\n\n### 金句摘录\n\n> 拖延很容易让人陷入口是心非的陷阱中，很多时候借口只是在自欺欺人而已。\n\n> 你因拖延而产生的后果，并不会因为借口而发生改变。\n\n> 这些借口都是人们对自己的束缚，更是他们强加到自己身上的。\n\n---\n\n## 第 0052 集｜所有的拖延借口都是会被识破的口是心非2\n\n### 核心内容\n\n本集给出第二个真相：拖延只会导致失败。任何一个踏实工作的人，从来不会给自己找借口推延，因为他们知道，上司要的是结果，而不是你再三解释的原因。无论在什么情况下，拖延只会导致失败。作者用三个场景说明「拖不起」：在商场上，买卖双方谈判一宗上千万元的大生意，这个时候你能拖延吗？时间就是金钱，你的一点点拖延都会让对方产生不信任感，犹豫之中，赚钱的机会就在不经意间溜走了。在考场上，面对题目繁杂的试卷，你能够拖延吗？时间就是分数，慌忙之中你乱了阵脚，不能发挥正常水平，于是本应是状元的你落榜了。在职场上，面对一项富有挑战的工作，你能够拖延吗？时间就是机遇，你的一点点拖延可能会耽误整个公司的流程，丧失最佳的竞争时机，同时也失去了成功的机会。\n\n无数事实证明，如果你想成功或成为你理想中的人，最好的办法就是绝不拖延、立即行动。这就要求我们平时就要养成立即行动的习惯，一旦发生了紧急事件或者当机会来临时，能够做出强有力的反应。同时，我们做事情一定要设定完成期限，并告诫自己这个期限是无法变更的，这样你就没有再拖延的借口。\n\n作者还刻画了拖延的长期危害：生活中，拖延会像癌细胞一样逐步扩散，直至吞噬你的整个生命。你每次拖延所产生的负面能量会一点一滴地积累起来，最后以水滴石穿般的威力严重影响你的自信、自尊、自爱，最终使你彻底崩溃。\n\n当然，这一危险意识需要自己去感悟，方法只是一种帮助你消除拖延的辅助手段，最主要的还是取决于你的思想和态度。只要你端正态度，让「绝不拖延」深入内心，即便没有任何方法，也能消除拖延。所以，选择权掌握在你自己手中。\n\n### 金句摘录\n\n> 上司要的是结果，而不是你再三解释的原因。\n\n> 拖延会像癌细胞一样逐步扩散，直至吞噬你的整个生命。\n\n> 选择权掌握在你自己手中。\n\n---\n\n## 本篇小结\n\n本篇五集围绕「借口」这一拖延最常用的挡箭牌层层推进。第 48 集确立基本判断：责任感与借口是天敌，借口能掩盖懒惰、换来一时心安，代价却是疏于努力、把精力耗在编造托辞上。第 49、50 集用徐翔的故事演示借口的滑坡路径——从拿工伤当挡箭牌，到习惯性迟到误事、与主任对骂、被冷落直至辞职；据此给出三步药方：克服懒惰选择行动、端正态度直面责任、没有借口立即行动。第 51、52 集进一步戳破借口的口是心非：论文被狗撕坏之类的解释骗不了任何人，后果也不会因借口而改变；商场、考场、职场三个场景证明时间就是金钱、分数与机遇，拖延只会导致失败。收束全篇的是两个可操作动作——给任务设一个不可变更的完成期限，让「绝不拖延」深入内心。借口的尽头是自我欺骗，行动的尽头才是结果。\n","outline":[{"level":2,"text":"本篇速览","id":"本篇速览"},{"level":2,"text":"第 0048 集｜借口总是拖延的挡箭牌1","id":"第-0048-集借口总是拖延的挡箭牌1"},{"level":3,"text":"核心内容","id":"核心内容"},{"level":3,"text":"金句摘录","id":"金句摘录"},{"level":2,"text":"第 0049 集｜借口总是拖延的挡箭牌2","id":"第-0049-集借口总是拖延的挡箭牌2"},{"level":3,"text":"核心内容","id":"核心内容-2"},{"level":3,"text":"金句摘录","id":"金句摘录-2"},{"level":2,"text":"第 0050 集｜借口总是拖延的挡箭牌3","id":"第-0050-集借口总是拖延的挡箭牌3"},{"level":3,"text":"核心内容","id":"核心内容-3"},{"level":3,"text":"金句摘录","id":"金句摘录-3"},{"level":2,"text":"第 0051 集｜所有的拖延借口都是会被识破的口是心非1","id":"第-0051-集所有的拖延借口都是会被识破的口是心非1"},{"level":3,"text":"核心内容","id":"核心内容-4"},{"level":3,"text":"金句摘录","id":"金句摘录-4"},{"level":2,"text":"第 0052 集｜所有的拖延借口都是会被识破的口是心非2","id":"第-0052-集所有的拖延借口都是会被识破的口是心非2"},{"level":3,"text":"核心内容","id":"核心内容-5"},{"level":3,"text":"金句摘录","id":"金句摘录-5"},{"level":2,"text":"本篇小结","id":"本篇小结"}]},{"id":"T11","title":"第0053-0055集","full":"拖延心理学 · 第 53–55 集（负责的人，不需要借口）","lect":"","dur":"6:40","sec":400,"theme":"","url":"","md":"# 拖延心理学 · 第 53–55 集（负责的人，不需要借口）\n\n> **合集**：【有声书】拖延心理学停止内耗时间管理自律自控自制（B站 UP主：勤者读书）\n> **对应集数**：第 53–55 集（负责的人，不需要借口）\n> **时长**：约 6.7 分钟（400 秒）\n> **本篇要点**：责任感 · 主动认错 · 马上去做 · 弥补措施\n\n---\n\n## 本篇速览\n\n| 集 | 标题 | 一句话要点 |\n| --- | --- | --- |\n| 0053 | 负责的人，不需要借口1 | 秘书菲菲被经理迁怒，半小时后出来，经理却笑容满面让她好好干 |\n| 0054 | 负责的人，不需要借口2 | 菲菲主动揽下失职、感谢批评，反而让经理消气并看清了责任所在 |\n| 0055 | 负责的人，不需要借口3 | 负责任的两点要求与三个做法：马上去做、绝不找借口、寻找弥补措施 |\n\n---\n\n## 第 0053 集｜负责任的人，不需要借口1\n\n### 核心内容\n\n本集把话题从「找借口」推进到「负责任」。无论是工作还是生活，我们都强调责任感。什么是责任？作者引用一位企业管理者的话作答：如果你能真正地钉好一枚纽扣，这应该比你缝制出一件粗制的衣服更有价值——这就是工作中的责任。无论自己的工作是什么，重要的是你是否做好了你的工作。责任不在于岗位的大小与事项的琐碎，而在于把手头的事做到位。\n\n由此引出领导视角的期望：要知道，任何一位领导都希望自己的下属能尽力做好自己的工作，而做好自己工作的第一步就是立即执行。所以领导者始终相信，只有那些绝不拖延的人才能勇于承担责任，才有可能被赋予更多的使命，才有资格获得更大的荣誉。在领导的信任链条里，「不拖延」与「能担当」是一体两面：拖延的人连及时完成都做不到，谈何承担更大的责任？\n\n接着作者引出菲菲的职场故事作为例证。文秘专业的菲菲毕业以后，就在一家小型公司担任经理秘书。按说秘书本身工作清闲，但菲菲却不是，因为这家公司小，很多杂事都被菲菲一手包办了。菲菲没有抱怨，反而努力地工作着，因为她一直感谢这家公司给予的机会，让自己逐渐成长起来。这天，菲菲正在办公室整理财务部送上来的本月报表，第二天经理开会时需要这份文件。这时，经理气急败坏地走了进来，冲着菲菲嚷嚷道：陶菲菲，你给我进来！办公室的其他同事听到经理生这么大的气，都觉得菲菲这次肯定要挨批评了，都为她捏了一把汗。\n\n然而结局出人意料：半个小时过去了，菲菲出来了，经理也跟着走了出来。菲菲还是和进办公室的时候一样淡定，而经理脸上则明显挂满了笑容，并对菲菲说：陶菲菲，好好干，我看好你。挨了训斥的员工如何让领导转怒为喜？答案在下一集揭晓。\n\n### 金句摘录\n\n> 如果你能真正的钉好一枚纽扣，这应该比你缝制出一件粗制的衣服更有价值。\n\n> 做好自己工作的第一步就是立即执行。\n\n---\n\n## 第 0054 集｜负责任的人，不需要借口2\n\n### 核心内容\n\n本集借同事之问展开菲菲的故事内核。同事们很诧异，问菲菲到底是怎么回事。菲菲道出原委：今天经理拿着我整理的报表去总公司开会时，被董事长批评了，因为表格上的一个小数点问题，董事长说他粗心大意。经理自然回来就不高兴了。菲菲心里也清楚：这报表虽然是我整理的，但它是从财务部门拿过来的，我只负责整理，而且最重要的是经理自己应该亲自看一遍。可是在这个问题上，经理责备的是我把报表上交得太晚，导致他没来得及看。经理进门看到菲菲，自然气就不打一处来。\n\n菲菲的处理方式显示出她的聪明与担当：我也不笨，总不能和他据理力争吧。我就主动承认是因为自己拖延，才导致出现这么大的问题，并对经理感激了一番，说他批评得对，以后一定及时工作、不拖了，并且会认真工作，对于报表一定要多检查——即使是财务部门送过来的，我也要仔细多检查几遍。这样一说，经理气消了，也明白了责任其实不在于菲菲。后来，经理又和她聊了一会儿，菲菲表示希望经理以后能够多多指教，帮助自己在工作中更好地锻炼自己。经理听了这些话，也就高兴起来了。\n\n作者从这个案例中提炼出两点。其一，面对气急败坏的领导对自己的批评，虽然责任并不在自己，但菲菲还是主动承认了自己的失职，虚心地接受了领导的批评，并对领导感激了一番，消除了领导的怒火。可以说，菲菲是一名负责任的员工——这样的员工即便没有按时完成工作任务，也不会找借口推脱。其二，通常来说，负责的人是不会拖延工作的。就案例中的情况来看，问题产生的原因也并非在于菲菲一人；相反，推脱责任的反而是他的领导，他把报表中的数据问题归结为菲菲上交报表的时间太晚，其实这都只是借口而已。真正负责的人用担当消化情绪，而逃避责任的人用借口转移矛盾，两相对照，高下立判。\n\n### 金句摘录\n\n> 这样的员工即便没有按时完成工作任务，也不会找借口推脱。\n\n> 通常来说，负责的人是不会拖延工作的。\n\n> 推脱责任的反而是他的领导……其实这都只是借口而已。\n\n---\n\n## 第 0055 集｜负责任的人，不需要借口3\n\n### 核心内容\n\n本集把菲菲案例升华为方法论。可见，工作中要做到负责任，有两点要求：一是及时着手工作，绝不拖延；二是一旦没有完成工作，就要主动承担责任，并且找到挽救的方法。与其给自己找理由推脱，还不如大大方方地承认——领导者会因为你能勇于承担责任而不责难于你。相反，推诿责任、搪塞敷衍、找借口为自己开脱，不但不会得到别人的理解，反而会雪上加霜，让别人觉得你不但缺乏责任感，而且还不愿意承担责任。\n\n围绕这两点要求，作者给出三个具体做法。首先，马上去做。对于领导所交代的任务，你要马上去做。每个上司都希望自己的员工有强有力的执行力。如果你在接到任务的时候左右迟疑、战战兢兢，那么上司可能会非常生气，对你也会很失望。执行力的第一属性就是速度，犹豫本身就是一种失分。\n\n其次，没有完成任务，绝对不找借口。工作中一些人在没有完成任务以后，不去寻找解决问题的方法，而是寻找各种为自己推脱的借口：「如果不是经理没布置任务，我一定会干得很出色的」「如果不是天气恶劣，我一定会准时到的」「如果不是别人给我设置某种障碍，我一定会顺利完成的」「如果不是客户太挑剔，我一定不会发火的」。世界上没有那么多的如果——无论是懊悔也好，还是逃避责任也罢，这都不能解决任何问题。任何一个领导也不希望听到这些借口。没有完成任务的原因，无论是主观的还是客观的，只能说明你的工作没有做到位，责任就在于你，这是不可推脱的。\n\n最后，寻找弥补的措施。其实与其绞尽脑汁寻找那些为自己开脱的借口，倒不如想一想怎么能把出现的损失降到最低点。我们应该尽量制作一份新的弥补方案，并且完善好细节，因为大多数情况下，问题都出现在这些细节上。\n\n结尾作者把视角拉回读者自身：作为员工，不要总抱怨领导没有给你机会，有空的时候不妨仔细想一想——当领导交给你某项任务时，你是否漂亮地完成了，并且没有那么多的借口？你是否平时就给老板留下了一个能够承担责任的印象？如果都没有的话，那你就别抱怨机会不来敲你的门。\n\n### 金句摘录\n\n> 与其给自己找理由推脱，还不如大大方方地承认。\n\n> 世界上没有那么多的如果。\n\n> 如果都没有的话，那你就别抱怨机会不来敲你的门。\n\n---\n\n## 本篇小结\n\n本篇三集以秘书菲菲的故事为轴心，完成了从「不找借口」到「主动负责」的升级。第 53 集先立标准：责任是钉好一枚纽扣的匠心，做好工作的第一步是立即执行，只有绝不拖延的人才能被赋予更多使命；菲菲被经理迁怒骂进办公室，出来时却让对方笑容满面，悬念引出答案。第 54 集揭晓答案：面对并不属于自己的小数点事故，菲菲不辩解、先认账，主动承认拖延并承诺以后多检查，反而让经理消了气、看清了真正的责任归属——负责的人不拖延，找借口的反而是推脱责任的一方。第 55 集给出可复制的行动框架：及时着手、绝不拖延，没完成就主动担责并寻找补救；具体做法是马上去做、绝不找借口、制作弥补方案完善细节。全篇的落点发人深省：与其抱怨机会不来敲门，不如先问自己是否在每一项任务里都留下了「能担当」的印象。\n","outline":[{"level":2,"text":"本篇速览","id":"本篇速览"},{"level":2,"text":"第 0053 集｜负责任的人，不需要借口1","id":"第-0053-集负责任的人不需要借口1"},{"level":3,"text":"核心内容","id":"核心内容"},{"level":3,"text":"金句摘录","id":"金句摘录"},{"level":2,"text":"第 0054 集｜负责任的人，不需要借口2","id":"第-0054-集负责任的人不需要借口2"},{"level":3,"text":"核心内容","id":"核心内容-2"},{"level":3,"text":"金句摘录","id":"金句摘录-2"},{"level":2,"text":"第 0055 集｜负责任的人，不需要借口3","id":"第-0055-集负责任的人不需要借口3"},{"level":3,"text":"核心内容","id":"核心内容-3"},{"level":3,"text":"金句摘录","id":"金句摘录-3"},{"level":2,"text":"本篇小结","id":"本篇小结"}]}]},{"name":"破局篇 · 战拖实战","items":[{"id":"T12","title":"第0056-0066集","full":"拖延心理学 · 第 56–66 集（抱怨与懒惰：从调整心情到用行动改变自己）","lect":"","dur":"25:14","sec":1514,"theme":"","url":"","md":"# 拖延心理学 · 第 56–66 集（抱怨与懒惰：从调整心情到用行动改变自己）\n\n> **合集**：【有声书】拖延心理学停止内耗时间管理自律自控自制（B站 UP主：勤者读书）\n> **对应集数**：第 56–57 集（习惯性抱怨导致拖延心理的产生）、第 58–59 集（从不浪费时间的人，没有工夫抱怨时间不够）、第 60–61 集（调整心情，做个不拖拉不抱怨的人）、第 62–63 集（与其抱怨环境，不如用行动来改变自己）、第 64–66 集（懒惰只会耗空我们的时间和生命）\n> **时长**：约 25.2 分钟（1514 秒）\n> **本篇要点**：习惯性抱怨 · 珍惜时间 · 转换视角 · 改变自己 · 克服懒惰\n\n---\n\n## 本篇速览\n\n| 集 | 标题 | 一句话要点 |\n| --- | --- | --- |\n| 0056 | 习惯性抱怨导致拖延心理的产生1 | 抱怨像瘟疫蔓延，修理工小李在抱怨声中蹉跎数年一事无成 |\n| 0057 | 习惯性抱怨导致拖延心理的产生2 | 抱怨破坏积极潜意识、浪费时间；戒除抱怨才能改正拖延 |\n| 0058 | 从不浪费时间的人，没有工夫抱怨时间不够1 | 成功就是时间利用上的成功；与其抱怨不公，不如提前练好功力 |\n| 0059 | 从不浪费时间的人，没有工夫抱怨时间不够2 | 爱迪生用注水法测灯泡容量：珍惜时间的人从不抱怨更不拖延 |\n| 0060 | 调整心情，做个不拖拉不抱怨的人1 | 抱怨可以宣泄但要有度；祥林嫂式的反复诉苦只会让人厌烦 |\n| 0061 | 调整心情，做个不拖拉不抱怨的人2 | 六个生活场景对照：抱怨者与不抱怨者的一念之差 |\n| 0062 | 与其抱怨环境，不如用行动来改变自己1 | 把抱怨转化为反省与请求，抱怨就能成为进步的加速器 |\n| 0063 | 与其抱怨环境，不如用行动来改变自己2 | 胡萝卜、鸡蛋、咖啡豆同煮开水：改变自己适应逆境才是正解 |\n| 0064 | 懒惰只会耗空我们的时间和生命1 | 业精于勤荒于嬉；懒惰总是和拖延狼狈为奸 |\n| 0065 | 懒惰只会耗空我们的时间和生命2 | 莫泊桑拜师福楼拜：肯吃苦、勤练习，观察马车看出了门道 |\n| 0066 | 懒惰只会耗空我们的时间和生命3 | 才气就是坚持写作的结果；忍耐惰性，让马上行动成为习惯 |\n\n---\n\n## 第 0056 集｜习惯性抱怨导致拖延心理的产生1\n\n### 核心内容\n\n本集开始处理拖延的又一心理诱因——抱怨。生活中，我们常常会听到身边的人这样抱怨：工作太累了，天天都有做不完的活，连喘口气的机会都没有；看看我们公司的那伙人，那素质简直没法说；我们家那位一天只知道挣钱，连结婚纪念日都忘记了；我怎么就生了这么笨的一个儿子，学习好像从来都不用脑子。可见，抱怨就像瘟疫一样，在我们周围蔓延，愈演愈烈。在他们看来，似乎从来没有遇到过顺心的事。\n\n抱怨的代价是双重的：因为抱怨，他们不仅把自己搞得很烦躁，还无形之中耽误了手头的事。作者揭示了抱怨通向拖延的心理链条——无论是工作还是做其他事，一旦抱怨产生，就会产生对抗心理，进而产生拖延心理；而拖延也会加重事情的难度，再度让你陷入糟糕的情绪中，于是习惯性拖延就逐渐形成了。我们发现，无论是正在学习的学生，还是在做事的员工，只要一开始抱怨，他们的效率就会缓慢很多。而实际上，抱怨对于事情的解决毫无益处，它只会让我们在忙碌中兜圈子。相反，如果我们能心平气和地正视问题、厘清自己的思绪，那么找到解决方法的概率便会大大提高。\n\n作者用修理工小李的故事作证。小李高考落榜后就在一家汽车修理厂工作，从他开始工作的第一天就对自己的工作充满不满。他开始抱怨：修车这活简直太脏了，瞧把我身上弄的；真累呀，我简直讨厌死这份工作了；要不是考试中出了点失误，我现在都是名牌大学的大学生了，做修理这活太丢人了。每天小李都在煎熬和痛苦中过日子，但又害怕失去手上的这份工作，于是只要师傅不在，他就偷懒耍滑、应付了事。几年过去了，与小李一同进场的三个工友，各自凭借自己的手艺，或另谋高就，或被公司送进大学进修，只有小李仍旧在抱怨声中做他所蔑视的修理工。\n\n结论不言自明：无论我们做什么事，要想取得成绩，就必须要拿出全部的热情。如果你也像小李那样鄙视、厌恶自己的工作，对它投注冷淡的目光，那么即使你正从事最不平凡的工作，你也不会有所成。\n\n### 金句摘录\n\n> 抱怨就像瘟疫一样，在我们周围蔓延，愈演愈烈。\n\n> 一旦抱怨产生，就会产生对抗心理，进而产生拖延心理。\n\n> 即使你正从事最不平凡的工作，你也不会有所成。\n\n---\n\n## 第 0057 集｜习惯性抱怨导致拖延心理的产生2\n\n### 核心内容\n\n本集继续剖析抱怨的隐性成本。为什么抱怨的人会说生活这么累？因为他只看到了自己的付出，而没看到自己的所得。而不抱怨的人，即使真的很累，也不会埋怨生活，因为他们知道，失与得总是同在的，一想到自己所得，他们就会感到高兴。\n\n的确，抱怨只会让我们浪费大把的时间，因为它会破坏我们原本积极的潜意识。你可能有过这样的体会：只要我们的头脑中有一丝抱怨的意识，那么我们手中的工作就会不由自主地慢下来，然后为自己鸣不平、讨公道，甚至抱怨老天不公。在这种坏心情的影响下，不仅我们的工作和生活都受到了影响，我们的心态也会改变。而真正的智者总是能淡定冷静地看待世界、审视自己，最终成就自己。\n\n其实没有一种生活是完美的，也没有一种真正让人满意的生活。如果我们能做到不抱怨，而是以一种积极的心态去努力进取、做到珍惜时间，那么收获的将会更多。而一旦养成抱怨的习惯，那就像搬起石头砸自己的脚——于人无益，于己不利，于事无补，生活就成了牢笼一般，处处不顺、时时不满。所以每个人都应该认识到，自由的生活本身就是最大的幸福，哪有那么多抱怨呢？无论你的情况如何，都不要抱怨。生活是你的朋友，不是你的敌人；生活中总是会有一些不尽如人意，就算生活给你的是垃圾，你同样能把垃圾踩在脚底下，登上世界巅峰。\n\n本集收束到主题链条上：一旦我们产生习惯性抱怨，那么拖延心理随即产生；戒除抱怨，才能改正拖延的习惯，提高做事效率。其实，社会中每个人都应该各司其职，无论是学习、工作还是做其他事，这都是实现人生价值的方式，是我们幸福的源泉——既然如此，那还有什么可抱怨的呢？\n\n### 金句摘录\n\n> 抱怨只会让我们浪费大把的时间，因为它会破坏我们原本积极的潜意识。\n\n> 生活是你的朋友，不是你的敌人。\n\n> 就算生活给你的是垃圾，你同样能把垃圾踩在脚底下，登上世界巅峰。\n\n---\n\n## 第 0058 集｜从不浪费时间的人，没有工夫抱怨时间不够1\n\n### 核心内容\n\n本集的标题本身就是一句名言——「从不浪费时间的人，没有工夫抱怨时间不够」，提出者是美国政治家杰弗逊。这句话指出了时间对于我们的重要性：因为时间是生命的构成部分，任何一个人都没有太多的时间去挥霍。的确，「效率就是金钱」这句话绝对不是一句空话。可以说，追求成功必须追求效率；同样，要想成功就必须惜时。实际上，任何人只要能充分利用好时间，那么必当会成才。有些人只是利用好了几年，有些人只是重视年轻的时代，而成功者会尽量利用好每一天，甚至利用好每一分钟乃至每一秒钟，他们很少有浪费时间的行为。成功实质上就是时间利用上的成功。\n\n然而，一旦我们开始抱怨，我们就会无意识地放慢手头的工作。也就是说，如果我们想高效地做事、想解决问题，就要停止抱怨，用实力证明自己，用理智解决问题。要永远记住一点：我们的最终目标都是解决问题，而不是发泄情绪。\n\n作者进而把抱怨与「强者思维」对照：任何社会都是强者更强、弱者更弱。弱者很多时候不是去把自己磨练成强者，而是不断地抱怨不公平。他们从来弄不清楚，这个世界上其实没有绝对的公平，只有有能力的人才能在社会中处于竞争的优势。既然我们没有办法选择社会环境，为什么不选择改变自己呢？与其去抱怨，不如努力提高自己，为自己在未来的竞争中处于优势而提前练好功力，这才是正道——功力都不想练，却想成为赢家，天下有这么好的美事吗？\n\n本集末尾引出爱迪生的例子：大发明家爱迪生并不是一个学历很高的人，事实上，他只上过三个月的小学。他后来的成就，第一归功于母亲的教导，第二就是因为他珍惜时间。这位珍惜时间的典范如何利用每一分钟，下一集继续讲述。\n\n### 金句摘录\n\n> 从不浪费时间的人，没有工夫抱怨时间不够。（杰弗逊）\n\n> 我们的最终目标都是解决问题，而不是发泄情绪。\n\n> 成功实质上就是时间利用上的成功。\n\n---\n\n## 第 0059 集｜从不浪费时间的人，没有工夫抱怨时间不够2\n\n### 核心内容\n\n本集用爱迪生的故事给「惜时不抱怨」做出示范。爱迪生在研究期间，经常对自己的助手说：最大的浪费莫过于浪费时间了。因此他常常告诫自己：人生太短暂了，要多想办法，用极少的时间办更多的事情。\n\n一天，爱迪生在工作时交给助手一个任务：测量一下灯泡的容量。交代完事情以后，他又埋头工作了。过了一会儿，他问助手：你测出来的结果是多少？没想到，助手还在慌忙地测量灯泡的各个数值——周长、斜度等等。看到这里，爱迪生着急地说：怎么费那么多时间呢？于是他走过去，接过灯泡，向里面注满了水，然后交给助手说：把里面的水倒在量杯里，马上告诉我它的容量。助手立刻读出了数字。爱迪生说：这是最简单的测量方法了，既准确又节约时间，你怎么想不到呢？还去算，那岂不是白白地浪费时间吗？听到这儿，助手的脸红了。爱迪生喃喃地说：人生太短暂了，要节省时间，多做事情。\n\n纵观古今中外，一切有大建树者，无一不惜时。古书《淮南子》有云：圣人不贵尺之璧，而重寸之阴。他们从不抱怨，更不拖延，因为他们深知：抱怨只会让自己分散注意力，只会让自己的情绪更糟糕，只会更浪费时间。既然抱怨无益于解决问题，还不如抓紧时间解决手头上的事。\n\n作者还把压力重新定义为动力：可能现在的你每天为生活奔波，生活工作压得你喘不过气来，你开始抱怨生活、抱怨上司。但其实有压力才有动力，压力带给我们的不仅仅是痛苦和沉重，还能激发我们的潜能和内在激情。有句话讲得好：如果想抱怨，生活中一切都会成为抱怨的对象；如果不抱怨，生活中的一切都不会让人抱怨。总是以抱怨的心态工作，做起事来就难免拖拖拉拉、草率敷衍，更别说展现出富有激情的、创造性的工作表现了。如果说人一生的发展是不易反应的药物，那么压力就是一剂高效的催化剂——它不是鼓励你成功，而是逼迫你成功，让你没有选择不成功的余地，最终催人奋进，创造出生命的奇迹。\n\n### 金句摘录\n\n> 最大的浪费莫过于浪费时间了。（爱迪生）\n\n> 圣人不贵尺之璧，而重寸之阴。（《淮南子》）\n\n> 如果想抱怨，生活中一切都会成为抱怨的对象；如果不抱怨，生活中的一切都不会让人抱怨。\n\n---\n\n## 第 0060 集｜调整心情，做个不拖拉不抱怨的人1\n\n### 核心内容\n\n本集讨论抱怨的合理边界。生活和工作中，也许一些人已经认识到拖拉的负面效应，也想要做个雷厉风行、执行力强的人，但他们会说：生活太艰辛了，工作压力太大了，看着没有希望的人生，最终还是选择了拖拖拉拉、得过且过。的确，我们的生活中充满了各种各样的苦恼——家人身体不健康，工作不顺利，失恋、失业、求职碰壁等，所有这些烦心事都让人头疼无比。遇到这些事情的人，自然会抱怨自己比别人运气坏、比别人生活得糟糕。但是，用抱怨就能解决问题吗？很显然，答案是否定的。\n\n作者对抱怨采取了一种务实而不纵容的态度：身处烦心事之中，人的情绪容易激动，抱怨总是难免的。抱怨两句其实也没有什么大不了的，可以把抱怨看成是一种情绪的宣泄，但是这种宣泄是需要「度」的。就像鲁迅先生笔下的祥林嫂，无论走到哪里都把自己的伤口展示给别人看，人们本来是同情她的，后来都变成了厌烦。抱怨也是一样：一个人遇到了一些事情，总是不断地和身边的人抱怨，开始别人可能还会安慰你几句；但如果你只是不断地抱怨，却不想办法去解决，那么别人一样会远离你。\n\n本集还引用古希腊先哲爱比克泰德的话：骚扰我们的是我们对事物的意识，而不是事物本身。这句话就是要告诉人们，抱怨不能帮助你解决任何问题，还会为你带来很多莫名的苦恼。这句话也是全篇「调整心情」的理论基石——决定我们痛苦程度的，往往不是事件本身，而是我们看待事件的方式。\n\n结尾归纳出抱怨的传染性危害：有人说，抱怨就是一种恶性循环。抱怨让人看不到希望，看不到幸福，看不到关爱；抱怨的人不仅会抱怨自己的遭遇，还会抱怨自己身边的人。长此以往，我们就容易变成一个爱抱怨、爱拖拉的人。\n\n### 金句摘录\n\n> 骚扰我们的是我们对事物的意识，而不是事物本身。（爱比克泰德）\n\n> 抱怨是一种情绪的宣泄，但是这种宣泄是需要度的。\n\n> 抱怨就是一种恶性循环，抱怨让人看不到希望，看不到幸福，看不到关爱。\n\n---\n\n## 第 0061 集｜调整心情，做个不拖拉不抱怨的人2\n\n### 核心内容\n\n本集通过一连串生活场景的对照，示范「换个角度想」的具体操作。诚然，当下的你每天都会遇到一些让你烦心的事：这个月业绩不好被老板责怪，某次行业比赛中你因为疏忽而影响整个团队的成绩。对此你肯定很懊恼，但是懊恼又有什么用呢？不停地抱怨、不断地自责，只会将自己的心境弄得越来越糟，工作效率也会越来越低下。为什么不从另外一个角度来思考整件事呢？\n\n作者给出六组对照。其一，早上起床晚了：抱怨的人会想，家里人为什么不叫我一声，真是不负责任；不抱怨的人会想，也许是他们想让我多睡一会儿。其二，出门走路与别人撞了一下：抱怨的人会想，挺大个活人都看不见，长眼睛干什么的；不抱怨的人会想，他肯定是有什么急事没看见，也怪我没注意。其三，到了公司，同事从对面走过来却对你熟视无睹：抱怨的人会想，他对我是不是有什么意见？牛什么，我还懒得理他呢；不抱怨的人可能想都不想，顶多会想他准是想着心事没留神。其四，你辛辛苦苦做完一件工作，满以为会得到上司的夸赞，谁知道上司不哼不哈，连个高兴的脸色都不给：抱怨的人此时就会想，遇见这样的上司，活该我倒霉，一辈子都没有出头之日了；不抱怨的人会想，这本就是我的分内之事。其五，下班了，原本打算早点回家的你，却被临时通知要开会：抱怨的人会想，下班都不让人回家，这是什么破公司呀；不抱怨的人会想，也许真的是有什么重要的事情。其六，好不容易回到家，爱人还没回来做饭：抱怨的人会想，一天忙得臭死，连顿现成饭都吃不上；不抱怨的人会想，今天终于有一个一显身手的机会了，我要给家人一个惊喜。\n\n同样的事件，不同的解释，带来完全不同的心情与行动节奏。作者总结：总之，如果你想成为充满正能量的人，想做一个行动能力强的人，你就要学会看到生活中美好的一面，抱着知足的心，那么你工作、生活起来也会开心、满足、有滋有味。\n\n### 金句摘录\n\n> 不停地抱怨，不断地自责，只会将自己的心境弄得越来越糟。\n\n> 学会看到生活中美好的一面，抱着知足的心，工作生活起来也会开心、满足、有滋有味。\n\n---\n\n## 第 0062 集｜与其抱怨环境，不如用行动来改变自己1\n\n### 核心内容\n\n本集把「不抱怨」推进为「用抱怨加速成长」。我们都知道，在现实的生活中，抱怨是人们宣泄不良情绪的一种方式，抱怨可以让心中的不满稍微减轻一些。但是很多人似乎理解错了抱怨的含义——它绝非人生主要的生存状态。更多的时候，我们在抱怨不满的时候，应该做适当的反省：为什么自己会有这样那样的不满？是不是因为自己做得不够好？这样，抱怨也可以作为一个加速器，加速自己的成功。只要你能够通过抱怨看到自己的缺点，你就会进步。\n\n具体怎么转化？作者给出几条路径：聪明的人懂得通过抱怨来反省自己、接纳生活。抱怨自己的人，会看到自己的缺点，然后努力改正；抱怨别人的人，可以将抱怨转化成请求；抱怨运气的人，不如继续向前，化抱怨为动力，幸运之神迟早会被你的努力所打动。归根到底，抱怨是为了让生活更美好、为了督促自己更快地达到目标——抱怨其实就是为了不抱怨。只有不抱怨、淡然地接受一切，你才能收获幸福。\n\n作者又回到职场场景：在现代企业里，总是有一些人对待工作抱有消极倦怠的态度，对待工作内容总是能拖就拖。问他为何不积极工作，他会反驳：底层员工就这么点薪水，没热情努力工作。既然如此，为何不努力工作，成为你所羡慕的高层管理者呢？这一问直指抱怨者的逻辑漏洞：用现状为自己拖延辩护，却不去改变现状。\n\n本集最后点出本篇下半部的纲领：执着于过去是很难洒脱地走向明天的。一个人只有学会放下对环境的坏情绪、适应环境，才能有意识地改变自己，最终改变命运。再比如，一些人抱怨自己经济能力差，所以没有去找女朋友，那么为何不努力改善经济状况呢？其实，归根结底，我们还是要记住一句话：你改变不了环境，但是你可以改变自己；你改变不了事实，但是你可以改变态度。\n\n### 金句摘录\n\n> 只要你能够通过抱怨看到自己的缺点，你就会进步。\n\n> 抱怨其实就是为了不抱怨。\n\n> 你改变不了环境，但是你可以改变自己；你改变不了事实，但是你可以改变态度。\n\n---\n\n## 第 0063 集｜与其抱怨环境，不如用行动来改变自己2\n\n### 核心内容\n\n本集用一个广为流传的寓言，讲透「面对逆境的三种反应」。一个女儿向当厨师的父亲抱怨她的生活，抱怨事事都那么艰难。她的父亲把她带进厨房：他先烧开三锅水，然后往一只锅里放些胡萝卜，第二只锅里放一只鸡蛋，最后一只锅里放入研磨成粉末状的咖啡豆。他将它们浸入开水中煮，一句话也没有说。大约二十分钟以后，他把火关了，把胡萝卜捞出来放入一个碗内，把鸡蛋捞出来放入另外一个碗内，然后又把咖啡舀到一个杯子里。做完这些后，他才转过身问女儿：孩子，你看见什么了？女儿回答：胡萝卜、鸡蛋、咖啡。\n\n父亲让她靠近些，并让她用手摸摸胡萝卜——她摸了摸，注意到它们变软了。父亲又让女儿拿一只鸡蛋并打破它，将壳剥掉之后，她看到了一只煮熟的鸡蛋。最后，父亲让她喝了咖啡，她品尝到香浓的咖啡，笑了。她怯声问道：父亲，这意味着什么？\n\n父亲解释说：这三样东西面临同样的逆境——煮沸的开水，但它们的反应各不相同。胡萝卜入锅之前是强壮的、结实的、毫不示弱，但是进入开水之后，它变软了、变弱了。鸡蛋原来是易碎的，它薄薄的外壳保护着成液体的内脏，但是经开水一煮，它的内脏变硬了。而粉状咖啡豆则很独特——进入沸水之后，它们倒改变了水。父亲问女儿：当逆境找上门来时，你该如何反应？你是胡萝卜，是鸡蛋，还是咖啡豆？\n\n作者的解读落在第二种与第三种之间：其实，生活中的我们不就应该像故事中的鸡蛋一样吗？当我们身处困境时，最应该做的就是改变自己、适应它，并且让自己逐渐强大起来。总之，任何不满意现在状态的人，都需要懂得多改变自己、少埋怨环境。正如一句名言所说：如果你认为你处在恶劣的环境中，那么请好好地修炼，练好内功，等待爆发的日子。\n\n### 金句摘录\n\n> 这三样东西面临同样的逆境，煮沸的开水，但它们的反应各不相同。\n\n> 多改变自己，少埋怨环境。\n\n> 如果你认为你处在恶劣的环境中，那么请好好地修炼，练好内功，等待爆发的日子。\n\n---\n\n## 第 0064 集｜懒惰只会耗空我们的时间和生命1\n\n### 核心内容\n\n本集转入本篇最后一个主题：懒惰。开篇引古人所言：业精于勤，荒于嬉；行成于思，毁于随。这句话告诉我们，学业由于勤奋而精通，但它却荒废在嬉笑声中；事情由于反复思考而成功，但它却毁灭于随随便便。任何人，即使是天才，如果不克服懒惰、做事拖延，最终也会变成一个懒汉。\n\n作者将懒惰放进时间与生命的尺度中衡量：当今社会，我们已经认识到时间的重要性。人的一生短短几十载，生命是有限的。如果我们浪费时间，工作和生活中总是拖拖拉拉，那么最终只能白白浪费生命；而假如我们能充分利用自己的时间和精力、勤奋做事，那么我们绝对可以做出更有价值的事情来。\n\n懒惰与拖延的关系再次被点明：懒惰总是和拖延狼狈为奸。有人甚至给那些懒惰的人下定义为「把不愉快或成为负担的事情抛至脑后或推迟做」。这个定义精确地刻画了懒惰的行为模式：凡是让人不舒服的事、有负担的事，一律后置，直至被遗忘。\n\n生活中的你，如果是一个懒惰的人，那你大部分时候都在浪费时间、无所事事；即便是做一件事情，也是担心这个、担心那个，或者找借口推迟行动，结果往往错失了机会和灵感，到最后只能去羡慕那些因为勤奋而获得成功和财富的人。拖沓、懒散的生活和工作态度，对许多人来说已经是一种常态。要想有所成就，我们就应该忍耐惰性，努力让自己变得勤勉起来。\n\n那么，勤勉具体长什么样？本集结尾引出莫泊桑拜师的故事作为下一集的开端：19 世纪法国著名作家莫泊桑，从小酷爱写作、孜孜不倦，却始终写不出有特色的作品，直到遇见文学大师福楼拜。\n\n### 金句摘录\n\n> 业精于勤，荒于嬉；行成于思，毁于随。\n\n> 任何人，即使是天才，如果不克服懒惰，做事拖延，最终也会变成一个懒汉。\n\n> 要想有所成就，我们就应该忍耐惰性，努力让自己变得勤勉起来。\n\n---\n\n## 第 0065 集｜懒惰只会耗空我们的时间和生命2\n\n### 核心内容\n\n本集完整讲述莫泊桑拜师的故事。莫泊桑是 19 世纪法国著名作家，他从小酷爱写作，孜孜不倦地写下了许多作品，但这些作品都普普通通，没有什么特色。莫泊桑焦急万分，于是他去拜法国文学大师福楼拜为师。\n\n一天，莫泊桑带着自己写的文章去请福楼拜指导，他坦白说：老师，我已经读了很多书，为什么写出来的文章总感到不生动呢？福楼拜直截了当地回答：这个问题很简单，是你的功夫还不到家。那怎样才能使功夫到家呢？莫泊桑急切地问。福楼拜说：这就要肯吃苦、勤练习。你家门前不是天天都有马车经过吗？你就站在门口，把每天看到的情况都详详细细地记录下来，而且要长期记下去。\n\n第二天，莫泊桑真的站在家门口，看了一天大街上来来往往的马车，可是一无所获。接着他又连续看了两天，还是没有什么发现。万般无奈，莫泊桑只得再次来到老师家，一进门就说：我按照您的教导看了好几天马车，没看出什么特殊的东西，那么单调，没有什么好写的。福楼拜反驳道：不，怎么能说没什么东西好写呢？那富丽堂皇的马和装饰简陋的马车是一样的走法吗？烈日炎炎下的马车是怎么走的？狂风暴雨中的马车是怎么走的？马车上坡时马是怎样用力？马车下坡的时候赶车的人怎样吆喝？他的表情是什么样的？这些你都能写得清楚吗？福楼拜滔滔不绝地说着，一个接一个的问题在莫泊桑的脑海中打下了深深的烙印。\n\n从此，莫泊桑天天在大门口全神贯注地观察过往的马车，从中获得了丰富的材料，写出了一些作品，于是他再一次去请福楼拜指导。福楼拜认真地看了几篇，脸上露出了笑容，说：这些作品表明你有了进步。但青年人贵在坚持，才气就是坚持写作的结果。\n\n这个故事与懒惰恰成对照：肯吃苦、勤练习、长期坚持观察记录，正是对「把不愉快或有负担的事推迟做」这一懒惰定义的正面回击——莫泊桑下的恰恰是最枯燥、最需要忍耐的笨功夫。\n\n### 金句摘录\n\n> 这就要肯吃苦，勤练习。（福楼拜）\n\n> 青年人贵在坚持，才气就是坚持写作的结果。（福楼拜）\n\n---\n\n## 第 0066 集｜懒惰只会耗空我们的时间和生命3\n\n### 核心内容\n\n本集续完莫泊桑的故事，并做全篇的总结提升。福楼拜继续对莫泊桑说：写东西光仔细观察还不够，还要能发现别人没有发现和没有写过的特点。比如你要描写一堆篝火或一株绿树，就要努力去发现它们和其他的篝火、树木不同的地方。莫泊桑专心地听着老师的话，受到很大的启发。\n\n福楼拜喝了一口咖啡，又接着说：你发现了这些特点，就要善于把它们写下来。今后当你走进一个工厂的时候，就描写这个厂的守门人——用画家的那种手法，把守门人的身材、姿态、面貌、衣着以及全部精神本质都表现出来，让我看了以后，不至于把他同农民、马车夫或其他任何守门人混同起来。莫泊桑把老师的话牢牢记在心头，更加勤奋努力。他仔细观察，用心揣摩，积累了许多素材，终于写出了不少有影响的世界名著。\n\n从莫泊桑拜师的故事中，年轻人应该有所领悟：功到自然成。成功之前难免会有失败，难免会有很多不足，但只要能够克服困难、坚持不懈地努力，那么成功就在眼前。\n\n作者随后对懒惰做出结构性的剖析：懒惰体现在两个方面——懒惰的思维和懒惰的行为。可以说，懒惰不仅是一个人成功的大敌，而且它还是我们不良情绪的源头。在充满困难与挫折的人生道路上，懒惰的人过着极为单调的生活，只习惯于等、靠、要，从来不想去发现、拼搏、创造，最终他们不仅错过了多姿多彩的生活，而且将会一事无成。\n\n总结而言：一个人成就的大小，取决于他做事情的习惯。忍耐惰性是做事情的一个重要技巧。我们要想完成既定的目标、取得成功，就应该培养勤勉的习惯；一旦养成了这个习惯，完成目标、马上行动就会成为一件自然而然的事。这也为本篇画上句点：戒掉抱怨，压住懒惰，行动就会从负担变成本能。\n\n### 金句摘录\n\n> 功到自然成。\n\n> 懒惰不仅是一个人成功的大敌，而且它还是我们不良情绪的源头。\n\n> 一个人成就的大小，取决于他做事情的习惯。\n\n---\n\n## 本篇小结\n\n本篇十一集是全书前半部的一次情绪总清理，沿「抱怨—时间—心态—环境—懒惰」五步递进。第 56、57 集揭示抱怨如何孕育拖延：抱怨引发对抗心理，对抗催生拖延，拖延加重难度又反过来恶化情绪，修理工小李在蔑视工作的抱怨声中蹉跎数年，而工友们凭手艺各自高飞——戒除抱怨才能改正拖延。第 58、59 集借杰弗逊名言与爱迪生注水测灯泡的故事确立时间观：成功就是时间利用上的成功，惜时的人没工夫抱怨，压力实为催人奋进的催化剂。第 60、61 集教人调整心情：抱怨可作宣泄但须有度，祥林嫂式的诉苦只会耗尽同情；六组生活场景证明，换一个解释框架，同一件事就从烦恼变成日常。第 62、63 集给出环境困境的答案：把抱怨转化为反省、请求与动力，做逆境中改变水质的咖啡豆——改变不了环境就改变自己。第 64 至 66 集以「业精于勤荒于嬉」收束，用莫泊桑看马车的笨功夫诠释勤勉：懒惰分为思维与行为两层，只等靠要的人终将一事无成，而忍耐惰性、坚持行动，终会让成功水到渠成。\n","outline":[{"level":2,"text":"本篇速览","id":"本篇速览"},{"level":2,"text":"第 0056 集｜习惯性抱怨导致拖延心理的产生1","id":"第-0056-集习惯性抱怨导致拖延心理的产生1"},{"level":3,"text":"核心内容","id":"核心内容"},{"level":3,"text":"金句摘录","id":"金句摘录"},{"level":2,"text":"第 0057 集｜习惯性抱怨导致拖延心理的产生2","id":"第-0057-集习惯性抱怨导致拖延心理的产生2"},{"level":3,"text":"核心内容","id":"核心内容-2"},{"level":3,"text":"金句摘录","id":"金句摘录-2"},{"level":2,"text":"第 0058 集｜从不浪费时间的人，没有工夫抱怨时间不够1","id":"第-0058-集从不浪费时间的人没有工夫抱怨时间不够1"},{"level":3,"text":"核心内容","id":"核心内容-3"},{"level":3,"text":"金句摘录","id":"金句摘录-3"},{"level":2,"text":"第 0059 集｜从不浪费时间的人，没有工夫抱怨时间不够2","id":"第-0059-集从不浪费时间的人没有工夫抱怨时间不够2"},{"level":3,"text":"核心内容","id":"核心内容-4"},{"level":3,"text":"金句摘录","id":"金句摘录-4"},{"level":2,"text":"第 0060 集｜调整心情，做个不拖拉不抱怨的人1","id":"第-0060-集调整心情做个不拖拉不抱怨的人1"},{"level":3,"text":"核心内容","id":"核心内容-5"},{"level":3,"text":"金句摘录","id":"金句摘录-5"},{"level":2,"text":"第 0061 集｜调整心情，做个不拖拉不抱怨的人2","id":"第-0061-集调整心情做个不拖拉不抱怨的人2"},{"level":3,"text":"核心内容","id":"核心内容-6"},{"level":3,"text":"金句摘录","id":"金句摘录-6"},{"level":2,"text":"第 0062 集｜与其抱怨环境，不如用行动来改变自己1","id":"第-0062-集与其抱怨环境不如用行动来改变自己1"},{"level":3,"text":"核心内容","id":"核心内容-7"},{"level":3,"text":"金句摘录","id":"金句摘录-7"},{"level":2,"text":"第 0063 集｜与其抱怨环境，不如用行动来改变自己2","id":"第-0063-集与其抱怨环境不如用行动来改变自己2"},{"level":3,"text":"核心内容","id":"核心内容-8"},{"level":3,"text":"金句摘录","id":"金句摘录-8"},{"level":2,"text":"第 0064 集｜懒惰只会耗空我们的时间和生命1","id":"第-0064-集懒惰只会耗空我们的时间和生命1"},{"level":3,"text":"核心内容","id":"核心内容-9"},{"level":3,"text":"金句摘录","id":"金句摘录-9"},{"level":2,"text":"第 0065 集｜懒惰只会耗空我们的时间和生命2","id":"第-0065-集懒惰只会耗空我们的时间和生命2"},{"level":3,"text":"核心内容","id":"核心内容-10"},{"level":3,"text":"金句摘录","id":"金句摘录-10"},{"level":2,"text":"第 0066 集｜懒惰只会耗空我们的时间和生命3","id":"第-0066-集懒惰只会耗空我们的时间和生命3"},{"level":3,"text":"核心内容","id":"核心内容-11"},{"level":3,"text":"金句摘录","id":"金句摘录-11"},{"level":2,"text":"本篇小结","id":"本篇小结"}]},{"id":"T13","title":"第0067-0074集","full":"拖延心理学 · 第 67–74 集（职场热情与勤奋不拖延）","lect":"","dur":"18:00","sec":1080,"theme":"","url":"","md":"# 拖延心理学 · 第 67–74 集（职场热情与勤奋不拖延）\n\n> **合集**：【有声书】拖延心理学停止内耗时间管理自律自控自制（B站 UP主：勤者读书）\n> **对应集数**：第 67–74 集（第67集_抵制负面情绪侵蚀工作热情1 · 第68集_抵制负面情绪侵蚀工作热情2 · 第69集_抵制负面情绪侵蚀工作热情3 · 第70集_职场机遇钟情于勤奋不拖延的人1 · 第71集_职场机遇钟情于勤奋不拖延的人2 · 第72集_职场机遇钟情于勤奋不拖延的人3 · 第73集_做点分外事，其实不吃亏1 · 第74集_做点分外事，其实不吃亏2）\n> **时长**：约 18 分钟\n> **本篇要点**：热爱工作是最大动机 · 勤奋不拖延才有机遇 · 多做分外事不吃亏\n\n---\n\n## 本篇速览\n\n| 集 | 标题 | 一句话要点 |\n| --- | --- | --- |\n| 0067 | 第67集_抵制负面情绪侵蚀工作热情1 | 失去热情的人总有一堆不改变的借口，热爱才是成功的动力 |\n| 0068 | 第68集_抵制负面情绪侵蚀工作热情2 | 微软临时清洁女工因热爱工作而被盖茨打动、转为正式员工 |\n| 0069 | 第69集_抵制负面情绪侵蚀工作热情3 | 打工心态决定结果，赋予工作更多价值，能力与回报双升 |\n| 0070 | 第70集_职场机遇钟情于勤奋不拖延的人1 | 成功者总比别人多付出一步，细心耐心的小文员终获提拔 |\n| 0071 | 第71集_职场机遇钟情于勤奋不拖延的人1 | 付出不亚于任何人的努力，管理顾问七年奋斗终成大器 |\n| 0072 | 第72集_职场机遇钟情于勤奋不拖延的人3 | 成功是一连串的奋斗，踏实做事的态度是人生增值的砝码 |\n| 0073 | 第73集_做点分外事，其实不吃亏1 | 与企业利益相关的事都该尽力做好，多做分外事会有额外收获 |\n| 0074 | 第74集_做点分外事，其实不吃亏2 | 一句\"辛苦了\"赢得十年司机的真心，多做事是负责任的态度 |\n\n---\n\n## 第 0067 集｜抵制负面情绪侵蚀工作热情\n\n### 核心内容\n\n现实生活中，大部分人在刚踏入职场时都怀揣梦想，希望大展拳脚。但现实情况往往是，面对每天必须重复的工作，他们逐渐失去热情，甚至开始抱怨工作、做事拖拉，却拒绝做出任何改变。如果你问他们为什么不干脆辞职、不要求调任、或者做点什么来改变现状，他们总有一大堆借口：我要还贷款，家人不允许我这么做；我对这份工作已经习惯了，也许没有更好的地方；我工资很高，舍不得放弃这份高薪；我没有其他技能，只会做这个等等。而这些，全都是对工作不热爱的表现。以这样的状态工作，你会发现工作是枯燥的，效率也是低下的。\n\n事实上，无论你从事哪一行，热情都是你成功的动力。鲍尔默说，我想让所有人和我一起分享我对我们产品与服务的激情，我想让所有员工分享我对微软的激情。卡耐基也说，除非喜欢自己所做的工作，否则永远无法成功。成功始于源源不断的工作热忱，你只有热爱你的工作，才会珍惜时间、把握每一个机会、调动所有的力量去争取出类拔萃的成绩。可见，对于工作而言，热爱才是最大的动机。只要热爱就会产生意愿，并且为之努力，最终获得成功。因此，身处职场，如果你发现自己的工作热情已经在退却，那么请开始热爱你的工作吧——你会自然而然地产生积极性、做出努力，并在最短时间内进步；在别人看来是千辛万苦，而本人却当作乐趣。\n\n书中讲了微软公司里一个临时清洁女工升职为正式职工的故事。她是办公楼里临时雇佣的清洁女工，整栋大楼有好几百名雇员，而她工资最低、学历最低（几乎没有什么学历）、工作量却最大，但她却是最快乐的人。她每天来得最早，面带微笑开始工作，对任何人的要求——哪怕不属于自己工作范围之内——也愉快而努力地去帮忙。周围的同事都被她感染，很多人成了她的好朋友，甚至包括那些公认冷漠的人。没有人在意她的工作性质和地位，她的热情就像一团火焰，慢慢让整个办公楼都快乐起来。\n\n### 金句摘录\n\n> 除非喜欢自己所做的工作，否则永远无法成功。\n\n> 对于工作，热爱才是最大的动机。\n\n> 在别人看来是千辛万苦，而本人却当作乐趣。\n\n---\n\n## 第 0068 集｜抵制负面情绪侵蚀工作热情\n\n### 核心内容\n\n这一集接着讲那位微软清洁女工的故事的后续。盖茨感到很惊异，忍不住问她：能否告诉我，是什么让您如此开心地面对每一天？女清洁工自豪地回答：因为我热爱这份工作。我没有什么知识，我很感激企业能给我这份工作，让我有不菲的收入，足够支持我的女儿读完大学，而我对这美好现实唯一可以回报的，就是尽一切可能把工作做好。一想到这些，我就非常开心。\n\n盖茨被她热爱工作的态度深深打动，于是问她：那么您有没有兴趣成为我们当中正式的一员呢？我想你是微软最需要的。女清洁工睁大眼睛说：当然，那可是我最大的梦想啊。此后，她开始用工作闲暇时间学习计算机知识，企业里每个人都乐意帮助她，几个月后，她真的成了微软的一名正式雇员。\n\n这个故事给普通人的启示是：生活中的你也应该和这位女工一样，热爱工作，把工作当成一门学问去研究，当成事业奋斗的理想目标，并且努力向上攀登。每一份平凡的工作，都是你获取新知识、新经验的来源。职位再低、工作再普通，只要怀着感恩与热爱把眼前的事做到最好，机会到来时你才接得住；反过来，若是守着负面情绪敷衍度日，再好的机会摆在你面前，你也看不见、够不着。\n\n### 金句摘录\n\n> 我对这美好现实唯一可以回报的，就是尽一切可能把工作做好。\n\n> 每一份平凡的工作，都是你获取新知识、新经验的来源。\n\n---\n\n## 第 0069 集｜抵制负面情绪侵蚀工作热情\n\n### 核心内容\n\n可能你会说：你是在为别人打工，再怎么热爱也不会成功。实际上，每个成功者都经历过打工的过程，但对工作的不同态度造就了不同的结果。如果你能抱着学习经验的态度对待现在的工作，那么工作能带给你的，要远比工资带给你的多得多，因为每一项工作中都包含着许多个人成长的机会。而那些因为薪水低就对工作敷衍、只求\"当一天和尚撞一天钟\"的人，固然对公司、对老板是一种损害，但长此以往，无异于在降低自己的价值，使自己的生命枯萎，将自己的希望断送，使自己维持在一种低档次的生活水平上，过着庸庸碌碌、牢骚不断的生活，并因此埋没了自己的才能，淹没了生命本该有的创造力。\n\n每个公司都需要热爱自己工作的人。如果你还在为自己只是平凡岗位的一员而抱怨，请先调整自己对工作的态度。只要你从现在开始热爱你的工作，不论岗位多么平凡，你都会有不俗的成绩。所以对一个想要成就一番大事的人来说，老板支付给你的只是薪水，但你一定要在工作之中赋予它更多的价值——你要在工作中支付给自己更多的东西。如果你投入百分之百的热情努力工作，你会发现自己的工作能力逐步提高，你会为此兴奋不已；同时，你努力工作也会得到更多的物质回报，薪水会在不知不觉间提升，因为你的努力老板都看在眼里，你的努力为公司带来了更好的业绩，老板就会因为你的工作态度和工作成绩而奖励你。\n\n因此，热爱你的工作吧。一个人所从事的工作，是他获得幸福的源泉，也是他的理想所在，更是他对待人生态度的体现。工作将填满你的大部分人生，唯一能获得真正满足的方法，就是做你相信是伟大的工作，而伟大的工作就是你所热爱的事业。我们可以从工作中释放自己的热情、能量、智慧，并获取一份快乐。\n\n### 金句摘录\n\n> 老板支付给你的只是薪水，但你一定要在工作之中赋予它更多的价值。\n\n> 唯一能获得真正满足的方法，就是做你相信是伟大的工作，而伟大的工作就是你所热爱的事业。\n\n---\n\n## 第 0070 集｜职场机遇钟情于勤奋不拖延的人\n\n### 核心内容\n\n我们都知道，世界上没有一件有价值的东西可以不通过辛勤劳动而获得；不吝惜自己汗水的人，也必将会有丰厚的收获。一个成功者的成功之处，就在于他总是比别人多付出一些，也比别人多向前迈进一步。身处职场的你，可能现在薪水不薄、工作稳定，但如果你希望在职场中取得一定成就，就不能就此停滞不前——激烈的竞争要求你不断进步，而求知与不满足是进步的第一必需品。要知道，任何时候，职场总是垂青那些勤奋不拖延的人。\n\n书中举了一个例子。一位自考毕业的男孩去应聘一家外贸公司的经理秘书，但公司却给他安排了一个行政部文员的职位。男孩想了一下，觉得只要自己耐心做好文员的工作一样很好，于是答应了。他的工作是负责接待客人和复印打印等琐事，同事们总是把需要复印、打印的文件一股脑堆在他桌上，然后告诉他哪些要复印、哪些要打印、各需要多少份。男孩总是耐心记录各种要求，然后仔细去做。有好几次，男孩的认真检查避免了公司的损失。因此，这个男孩真的被提拔为经理秘书了。他是这样对人说的：工作虽然简单，但是只要有超凡的耐心和细心，就会取得成功。\n\n工作中的你倘若也能如此，具备这样的忍耐力，你也能在平淡中积聚实力，最终实现自己人生的腾飞。正如一句名言所说：一个人如果想要获得成功，就必须付出与之相应的自我牺牲；如果期望较大的成功，就需要付出较大的自我牺牲；如果还想取得更大的成功，那就意味着更大的自我牺牲。\n\n### 金句摘录\n\n> 工作虽然简单，但是只要有超凡的耐心和细心，就会取得成功。\n\n> 如果还想取得更大的成功，那就意味着更大的自我牺牲。\n\n---\n\n## 第 0071 集｜职场机遇钟情于勤奋不拖延的人\n\n### 核心内容\n\n一个人想要获得人生的幸福，那么每一天都应该勤奋工作，付出不亚于任何人的努力。这是一个长期的过程，只要坚持，就一定能够获得不可思议的成就。事实证明，任何一个取得成功的人，都是因为他付出了超乎常人的努力。当我们观察成功人士所处的环境时，会发现他们的背景各不相同：那些大公司的经理、著名的传教士、政府高级官员以及各行业的知名人士，可能来自贫寒破碎的家庭、偏僻的乡村，甚至于贫民窟。这些人的成功无不是源于努力，并且是超乎常人的努力。\n\n全世界最早的现代成功学大师和励志书籍作家、曾经影响美国两任总统及千百万读者的拿破仑·希尔深知，成功就是一连串的奋斗。他特意讲了一个故事：我最要好的朋友是个非常有名的管理顾问，一走进他的办公室，马上就会觉得自己高高在上似的——办公室里各种豪华摆设、考究的地毯、忙进忙出的人潮，以及知名的顾客名单，都在告诉你，他的公司的确成就非凡。但就在这家鼎鼎有名的公司背后，藏着无数的辛酸血泪：创业之初的头六个月，他就把十年的积蓄用得一干二净；一连几个月都以办公室为家，因为付不起房租；他婉拒过无数的好工作，因为坚持自己的理想；他被顾客拒绝过上百次，拒绝他的和欢迎他的客户几乎一样多。在整整七年的艰苦挣扎之中，我没有听他说过一句怨言，他反而说：我还在学习呀。这是一种无形的、捉摸不定的生意，竞争很激烈，实在不好做，但不管怎样，我还是要继续学下去。结果他真的做到了，而且做得轰轰烈烈。有一次我问他：工作把你折磨得疲惫不堪了吧？他却说：没有，我不觉得那很辛苦，反而觉得是受用无穷的经验。\n\n看看美国名人榜上那些工业彪炳千秋的伟人的生平就知道，他们都受过一连串无情的打击，只是因为他们都坚持到底，才终于获得辉煌的成果。\n\n### 金句摘录\n\n> 成功就是一连串的奋斗。\n\n> 我不觉得那很辛苦，反而觉得是受用无穷的经验。\n\n---\n\n## 第 0072 集｜职场机遇钟情于勤奋不拖延的人\n\n### 核心内容\n\n拿破仑·希尔正是希望通过这个故事告诉人们：天下没有不劳而获的事，成功需要一连串的奋斗。如果我们能够不忘时刻积累经验、总结教训，做到不断学习的话，那么即使失败了，你也可以更上一层楼，终有一日能实现你的理想。可见，我们一定要形成勤奋努力、不拖延、勤勤恳恳的做事习惯，因为只有努力奋斗，才会充实你的人生，这就是你的人生不断增值的砝码。\n\n总之，身处职场的我们必须要记住：要想抓住机遇、想要在职场中做出成绩，就要秉持\"今天要比昨天好，明天还要比今天进步\"的态度，每天实实在在去努力。我们工作的目的之一就是实现自身的价值，而这不就存在于那些努力不懈的付出、脚踏实地的行动以及兢兢业业的求索中吗？对手头的每一样工作都异常认真，做到不拖延、不马虎——这种看似\"傻\"的工作态度，如果能长期坚持下去，必然能在职场实现你的卓越人生。\n\n这一集为整个\"职场机遇\"小节收束：机遇从不眷顾坐等拖延的人，只偏爱每天进步一点、认真对待手头每件事的人。所谓勤奋，不是一时的冲刺，而是把认真的态度日复一日地坚持下去。\n\n### 金句摘录\n\n> 今天要比昨天好，明天还要比今天进步。\n\n> 这种看似\"傻\"的工作态度，如果能长期坚持下去，必然能在职场实现你的卓越人生。\n\n---\n\n## 第 0073 集｜做点分外事，其实不吃亏\n\n### 核心内容\n\n生活中，你是不是也经常遇到这样的情况：上班时间突然来了一个老板的快递，但老板不在，签还是不签？朋友最近经济状况出了点问题，他并没有找你借钱，你帮还是不帮？看到会议室的材料掉在地上，你是捡还是不捡？诸如此类的分外事随时都有可能发生，你是做还是不做呢？可能很多人会回答：当然不做，既然是分外事，何必多此一举。\n\n的确，在我们工作的周围，一些懒惰的人不仅对自己的工作马虎拖拉，还十分\"聪明\"地害怕多做任何一点额外的工作。但事实告诉我们：那些被老板提拔的人都有一个共同的特点——他们对工作始终充满着春天般的热情，只要有闲暇时间，不会对别人说不；那些人缘好、处处受欢迎的人，总是对他人仗义相助；那些成功人士的身后，总有因机缘巧合而来的贵人相助。其实无论是在职场，还是在整个人际关系中，多做些事都不吃亏，因为你可能会因此得到额外的收获。\n\n书中讲了一个关于财富的故事。曾经有一个年轻人在一家小旅馆当服务员，一直勤勤恳恳地工作。这天晚上，一对老夫妇来开房间，但旅馆房间已经没了，老夫妇犯难了，因为他们真的没有地方去。年轻人很爽快地说：让老夫妇睡自己的房间，正好自己要值班。然后他把房间床单被褥都换了，自己趴在柜台上睡了一夜。第二天，老夫妇看到这种情景很是感动，认为这个年轻人很善良——他们绝对没有想到，这对老夫妇就是希尔顿饭店的老板，而且没有子女，于是他做了希尔顿家族的接班人。这名年轻人能从一名旅店服务员跻身于上流社会，与这对老夫妇的带领和引荐不无关系。这当然是机缘巧合，但却告诉了我们一个道理：职场工作，我们若想得到分外的回报，就不要总是置身事外，要多做一些分外事。\n\n不少人都认为做额外的事会吃亏，也没有多做事的意识。殊不知，作为一名员工，只要是与企业利益相关的，无论是分内还是分外的事，都应该尽力做好。事实上，聪明的职场人从不介意多做事，因为他们深知：为他人、为企业多做一些事，有时只是举手之劳，却能为自己赢得更多的支持。\n\n### 金句摘录\n\n> 我们若想得到分外的回报，就不要总是置身事外。\n\n> 为他人、为企业多做一些事，有时只是举手之劳，却能为自己赢得更多的支持。\n\n---\n\n## 第 0074 集｜做点分外事，其实不吃亏\n\n### 核心内容\n\n当然，某些情况下，我们简单的一句慰问和关心的话语也能有此效用。陈婷婷是一家大公司的小主管，负责采购的一些小事宜。有一次，公司采购部的车出了问题，而刚好总经理专用车司机刘师傅的轿车停在附近，出于方便，刘师傅准备载她一程。当时正值上下班高峰，路上交通拥挤，陈婷婷还赶时间，刘师傅也着急得不得了。这时陈婷婷开口安慰刘师傅道：刘师傅，这么多年，你每天都要在这样的交通状况下负责经理的出行，真是很辛苦呀！想不到这句衷心的关心之语使刘师傅非常高兴——他已经给经理开了十年车，十年来连经理都没跟他说过一句\"辛苦了\"。刘师傅感动得不得了，后来对当时的情景还念念不忘，在私下里经常主动帮陈婷婷的忙；再后来，陈婷婷升到采购部经理的时候，他还时常夸奖她，说总经理体恤下属、慧眼识英才等等。\n\n故事中的陈婷婷之所以会与刘师傅结下良好的关系，就在于其简单的一句关心的话——\"辛苦了\"。生活中我们每个人都在为自己的工作忙碌着、辛苦着，我们都希望自己能得到他人的理解、肯定和关心。如果有人能对我们说出\"辛苦了\"三个字，我们一般都会心生感激。\n\n当然，我们在职场多做事，并不是为了刻意获得他人支持，这只是一种负责任的工作态度。只有你有这个意识，并且化为行动，才能成就好的工作效率、积极的工作热情和拼搏的进取心，同样你也会因此而获得更好的职场前景。因此，即使你只是一名公司最基层的员工，当你接到一项并不属于你职责范围内、或者你并不喜欢的工作时，无需抱怨，更不要心里不平衡，你应该欣然接受并努力完成。在做事的过程中，你能积累到他人没有的经验，并且获取知识，最终会成为企业岗位上重要的人才，实现你的价值。所以说，我们多做一些事并不吃亏，因为企业最需要的，也正是这样不怕吃亏的员工。\n\n### 金句摘录\n\n> 我们都希望自己能得到他人的理解、肯定和关心。\n\n> 企业最需要的，也正是这样不怕吃亏的员工。\n\n---\n\n## 本篇小结\n\n本篇八集沿着\"热情—勤奋—分外事\"的职场主线层层推进。第 67–69 集指出，抱怨与借口是负面情绪侵蚀工作热情的信号，而热爱是医治的良方：微软清洁女工因热爱而快乐、因快乐而被看见，最终圆梦；打工者若只盯着薪水敷衍度日，损害的其实是自己的价值。第 70–72 集则把目光转向勤奋与坚持：机遇钟情于不拖延的人，文员凭耐心细致获得提拔，管理顾问靠七年苦熬成就非凡，成功是一连串的奋斗，每天进步一点、认真做好手头每件事，才是人生增值的砝码。第 73–74 集把道理落到日常细节：多做分外事不是吃亏，而是积累经验、赢得支持的机会，一句\"辛苦了\"也能结下善缘。三部分合起来告诉我们：摆脱拖延的内耗，就从热爱工作、勤奋做事、乐于多做一些开始。\n","outline":[{"level":2,"text":"本篇速览","id":"本篇速览"},{"level":2,"text":"第 0067 集｜抵制负面情绪侵蚀工作热情","id":"第-0067-集抵制负面情绪侵蚀工作热情"},{"level":3,"text":"核心内容","id":"核心内容"},{"level":3,"text":"金句摘录","id":"金句摘录"},{"level":2,"text":"第 0068 集｜抵制负面情绪侵蚀工作热情","id":"第-0068-集抵制负面情绪侵蚀工作热情"},{"level":3,"text":"核心内容","id":"核心内容-2"},{"level":3,"text":"金句摘录","id":"金句摘录-2"},{"level":2,"text":"第 0069 集｜抵制负面情绪侵蚀工作热情","id":"第-0069-集抵制负面情绪侵蚀工作热情"},{"level":3,"text":"核心内容","id":"核心内容-3"},{"level":3,"text":"金句摘录","id":"金句摘录-3"},{"level":2,"text":"第 0070 集｜职场机遇钟情于勤奋不拖延的人","id":"第-0070-集职场机遇钟情于勤奋不拖延的人"},{"level":3,"text":"核心内容","id":"核心内容-4"},{"level":3,"text":"金句摘录","id":"金句摘录-4"},{"level":2,"text":"第 0071 集｜职场机遇钟情于勤奋不拖延的人","id":"第-0071-集职场机遇钟情于勤奋不拖延的人"},{"level":3,"text":"核心内容","id":"核心内容-5"},{"level":3,"text":"金句摘录","id":"金句摘录-5"},{"level":2,"text":"第 0072 集｜职场机遇钟情于勤奋不拖延的人","id":"第-0072-集职场机遇钟情于勤奋不拖延的人"},{"level":3,"text":"核心内容","id":"核心内容-6"},{"level":3,"text":"金句摘录","id":"金句摘录-6"},{"level":2,"text":"第 0073 集｜做点分外事，其实不吃亏","id":"第-0073-集做点分外事其实不吃亏"},{"level":3,"text":"核心内容","id":"核心内容-7"},{"level":3,"text":"金句摘录","id":"金句摘录-7"},{"level":2,"text":"第 0074 集｜做点分外事，其实不吃亏","id":"第-0074-集做点分外事其实不吃亏"},{"level":3,"text":"核心内容","id":"核心内容-8"},{"level":3,"text":"金句摘录","id":"金句摘录-8"},{"level":2,"text":"本篇小结","id":"本篇小结"}]},{"id":"T14","title":"第0075-0080集","full":"拖延心理学 · 第 75–80 集（摒弃完美主义，完成比完美更靠谱）","lect":"","dur":"16:00","sec":960,"theme":"","url":"","md":"# 拖延心理学 · 第 75–80 集（摒弃完美主义，完成比完美更靠谱）\n\n> **合集**：【有声书】拖延心理学停止内耗时间管理自律自控自制（B站 UP主：勤者读书）\n> **对应集数**：第 75–80 集（第75集_追求细枝末节上的完美只会耗费过多时间1 · 第76集_追求细枝末节上的完美只会耗费过多时间2 · 第77集_摒弃完美主义，抓大放小只做有意义的事1 · 第78集_摒弃完美主义，抓大放小只做有意义的事2 · 第79集_完成比完美更靠谱1 · 第80集_完成比完美更靠谱2）\n> **时长**：约 16 分钟\n> **本篇要点**：过度完美等于吹毛求疵 · 抓大放小做最有意义的事 · 八分原则允许二分瑕疵\n\n---\n\n## 本篇速览\n\n| 集 | 标题 | 一句话要点 |\n| --- | --- | --- |\n| 0075 | 第75集_追求细枝末节上的完美只会耗费过多时间1 | 追求完美过度就成了吹毛求疵，文员改错字反而办了坏事 |\n| 0076 | 第76集_追求细枝末节上的完美只会耗费过多时间2 | 从生活小事培养严谨习惯，减少拘泥于小事的时间 |\n| 0077 | 第77集_摒弃完美主义，抓大放小只做有意义的事1 | 做事的标准不是有没有意义，而是是不是最有意义 |\n| 0078 | 第78集_摒弃完美主义，抓大放小只做有意义的事2 | 记录时间损耗、一次只做一件事、舍弃不必做的事 |\n| 0079 | 第79集_完成比完美更靠谱1 | 完美主义者常陷入泥沼，八分原则才是高效率工作者的选择 |\n| 0080 | 第80集_完成比完美更靠谱2 | 富翁为找最好的医生丢了性命，世上本没有十全十美 |\n\n---\n\n## 第 0075 集｜追求细枝末节上的完美只会耗费过多时间\n\n### 核心内容\n\n我们都知道，认真是做好一件事的前提。如果对什么事情都敷衍了事、草草出兵、草草收兵，必然做不好。精益求精、追求完美，这是一种积极的表现；如果人们都懒懒散散、满足于现状，那我们将会止步不前。因此可以说，追求完美并没有什么不好，相反，很多时候它对我们的能力、知识、经验等方面都大有益处。我们发现，任何一家企业都强调员工一定要严格要求自己。然而，凡事都有个度，追求完美到了一定的地步，也就变成了吹毛求疵。而且从做事效能的角度看，一个人过多地把精力放到细枝末节上，必定会耗费时间，长此以往，我们就会变得行动缓慢。\n\n我们的身边总有这样一些人：如果一些事情没有做到自己满意的程度，那么必定坐立不安、很不舒服。打个简单的比方，为了确保无误，一份财务报表他会核对几遍甚至几十遍；与客户谈好生意，为了保证客户对产品满意，总是不停地打电话追问，明明能在电话里或邮件中解决的问题，非要面谈；出门前为了让自己看上去更精神，会花一个小时的时间去挑选衣服。什么事情都要有个度，追求完美超过了这个度，就会降低我们的做事效能。毕竟一天只有 24 个小时，在一件事上消耗过多的精力，也就无法完成工作计划。\n\n琴琴是某家公司新聘请的文员，她一直是一个追求完美的人，无论上司交给她什么任务，她都努力做好。有一天，她的女上司说：这份资料是急着用的，你把它分成两份，各打印 200 份。于是她开始了工作，而在打印中，她发现居然有很多错别字，于是她耐心地把这些错别字改正了。她原以为上司会夸奖她，但事实上，她却因为没有按时把资料交上而挨了上司的骂。而最重要的是，那些在她看来是问题的\"错别字\"，却是公司的一些专业术语，改过之后的\"正确的字\"反而改变了原本的意思，为此她闹了一个大笑话。琴琴为什么会闹出这样的笑话？因为她太苛求细节了。重视细节固然是好事，这是一个负责任的表现，但过分苛求细节，有时却是好心办坏事；而且在你看来的完美，在别人眼里却不一定完美，因为任何事物都是相对的。\n\n### 金句摘录\n\n> 追求完美到了一定的地步，也就变成了吹毛求疵。\n\n> 一天只有 24 个小时，在一件事上消耗过多的精力，也就无法完成工作计划。\n\n---\n\n## 第 0076 集｜追求细枝末节上的完美只会耗费过多时间\n\n### 核心内容\n\n那些做事追求完美的人之所以会过分认真，是因为他们很在乎周围人的看法，害怕一些负面的评价。其实，谁也不会因为一个错误而成为不合格的人。生命像是一场球赛，最好的球队也会有丢分的记录，最差的球队也会有辉煌的一刻，我们的目标是尽可能让自己得到的多于失去的。那么，过分追求完美的人应该如何调整自己呢？\n\n第一，自己的事情自己做，养成细心的习惯。如果你是一名上班族，那么出门前你就该整理好当天要用的文件；如果你忘记了，那么你一定会吸取教训，时间一长，必然会变得仔细了。第二，从生活中开始培养自己严谨的做事习惯，减少拘泥于小事的时间。不难发现，如果一个人连自己的房间都一团糟，鞋子东一只西一只，那么他必定也是一个做事丢三落四、凭兴致行动、行为没有顺序、思考缺乏条理的人。因此你需要从生活的小事做起，不断培养自己良好的生活习惯，减少自己的马虎和粗心。\n\n俗话说，计划赶不上变化，无论你想把事情做得多么完美，那都是不可能的。所以我们只有注重事情的细节，认真尽心地把事情做得更好，而不应该苛求完美。常用的方法有：自己整理自己的衣橱、抽屉和房间，培养仔细有条理的习惯；自己安排自己的课余时间和复习进度表，培养有计划、有顺序的习惯。天长日久，你就会变得思维严谨起来，做事有规划，自然也就不会把过多的时间耗费在细节上了。\n\n每个人都深知细节的重要性，细节虽小，但若不注意就会酿成大错，因此注重细节是做好一件事的前提。然而不得不承认的是，我们做任何一件事都不可能做到面面俱到，如果你太过追求完美，一定会精疲力竭。时间在一分一秒不停地过，而一切都不是静止不变的，生活也在改变。就算你在某方面把事情做得很好，但没过多久，随着事情变化的趋势，再从另一个角度看，或许就不是那么完美了。\n\n### 金句摘录\n\n> 最好的球队也会有丢分的记录，最差的球队也会有辉煌的一刻。\n\n> 计划赶不上变化，无论你想把事情做得多么完美，那都是不可能的。\n\n---\n\n## 第 0077 集｜摒弃完美主义，抓大放小只做有意义的事\n\n### 核心内容\n\n生活中我们常常听到身边的人说：做人别指望所有人都会喜欢你。其实这句话也可以运用到我们的工作中——要想高效率地做事、不拖延，我们就不要试图把每件事的细枝末节都做到完美。时间是绝对有限的资源，你选择了做某件事情，就隐含了放弃做别的事情，做别的事情就是你的机会成本。所以我们做事情的标准，不是某件事有没有意义，而是某件事是不是最有意义。\n\n小刘因为工作努力，年纪轻轻就当上了一家食品公司的车间主任。从事这个行业以来，他一直兢兢业业，深受上级领导的赏识和信任，但他也有自己的苦恼。身为车间主任，原本他的工作是管理工人，但实际上很多时候，面对工人们的懒惰，他实在无法管理。比如上个星期一，他要去外地出差，临走之前，他交代员工要将客户催得很紧的一批货赶出来，并且要严把质量关。小刘心想，在他回来之前，这批货应该能出厂了。但情况出乎他的意料：当他回到公司以后，发现这些工人不但没有赶工，反倒忙自己的事情去了。气急了的他问员工小王：我交代给你的事你做好了吗？怎么有时间玩手机？小王很诧异地回答：是吗？这批食品不一直都是 A 组负责吗？小刘又找到 A 组的小琴，没想到小琴的回答是：您出门之前不是找了 B 组的人谈话吗？此时的小刘已经什么都不想说了，现在他能做的，就是拖着疲惫的身体替员工干活。\n\n小刘在工作中出现了什么问题？他是一名管理者，他的工作重心应该是管理，而不是亲力亲为去做下属的工作。真正懂得高效率做事的人，一定是懂得如何舍弃的人。我们必须掌握一个原则：确保自己永远在做最重要的事。这样能为我们省去很多不必要的麻烦，也绝对不会有太大的风险，工作就进行得快多了。\n\n### 金句摘录\n\n> 我们做事情的标准，不是某件事有没有意义，而是某件事是不是最有意义。\n\n> 真正懂得高效率做事的人，一定是懂得如何舍弃的人。\n\n---\n\n## 第 0078 集｜摒弃完美主义，抓大放小只做有意义的事\n\n### 核心内容\n\n许多人都已经意识到了完美主义给自己带来的困扰，然而他们却不敢面对这个问题，害怕因小失大造成错误，于是迟迟不敢动手，总是希望能将计划做得天衣无缝，总认为能将所有的事处理好，殊不知时间就这样被白白浪费了。确保自己一直都在做最重要的事情，实际上也就是确保了自己的时间一直都在被高效地利用。对此，有以下几条建议。\n\n第一，记录时间损耗。要提高职场工作的有效性，第一步就是记录时间耗用的实际情形。事实上，许多企业的管理者都经常保持这样一份时间记录，每月定期拿出来检讨。有效的管理者往往以连续 3–4 个星期为一个时段，每天记录，一年内记录 2–3 个时段。有了时间耗用的记录样本，他们便能自行检讨了。第二，要专注，也就是说一次仅做一件任务。在中国，大多数公司的人们越来越忙碌，尤其是那些高层领导者，其忙碌的情况简直不可思议：除了众多的出差，就是数不清的会议，工作负担越来越重，但结果却都是毫无意义的居多。仔细分析原因，我们发现他们同时专注的事情太多了——什么都想做，什么都想管，结果却是什么都做不好。因此，你若想提高工作效率，就应该从本质上消除\"坚固\"的想法，一次仅做一个任务。第三，学会舍弃一些不必做的事。将时间记录拿出来，逐项逐项地问：这件事如果不做，会有什么后果？如果认为不会有影响，那么这件事便立刻取消。然而，许多大忙人天天在做一些他们觉得难以割舍的事，比如应邀讲演、参加宴会、担任委员和列席指导之类，不知占去了多少时间。其实对付这类事情，只要审度一下：对于组织有无贡献，对于他本人有无贡献，或是对于对方的组织有无贡献——如果都没有，完全可以谢绝。\n\n总之，我们要想提高工作效率、杜绝拖延，就一定要摒弃完美主义，找出那些根本不必做的事。这些事做了也完全是浪费时间，无助于成果。\n\n### 金句摘录\n\n> 什么都想做，什么都想管，结果却是什么都做不好。\n\n> 这件事如果不做，会有什么后果？如果认为不会有影响，那么这件事便立刻取消。\n\n---\n\n## 第 0079 集｜完成比完美更靠谱\n\n### 核心内容\n\n在我们的周围，有这样一些人：他们工作认真、能力突出、勤勤恳恳，一些能力不如他们的人都已经成绩十分显著了，但他们却总是无法成功。这是为什么呢？在排除其他因素的情况下，他们很可能是陷入了完美主义的泥沼。不知道你是否有这样的感受：当你着手准备做某件事前，总感觉计划不周密，于是为了完善你的计划，你迟迟未动手；在接到上司的某件任务时，你发现上司的方案有一个不如意的地方，为此你花费了大量的时间去求证，最终也延误了上交任务的时间。如果你有这样的表现，那么很有可能你是一位完美主义者。\n\n对于完美主义者而言，他们着眼于细枝末节的事，认为要做好一件事，必须考虑每一个因素。然而，世界上根本就不存在绝对的完美，它只是乌托邦式的美好愿望而已。我们在做一件事时，完成远比完美更靠谱。举个简单的例子：领导交给我们某个任务，他要看到的只是工作成果而已，并不是完美无瑕的艺术品。如果我们一味地考虑其中可能出现的漏洞，而不去实现的话，那么在领导眼里是看不到你的努力的。\n\n凡事都要有个度，追求完美到了一定的地步，也就变成了吹毛求疵；如果不达到想象中的彻底完美誓不罢休，那就是在和自己较劲了。长此以往，不但会让我们养成拖延的坏习惯，还会让我们心里有解不开的疙瘩，我们自己也会渐渐承受不了这种越来越沉重的负担。绝对完美的事是不存在的，任何一个高效率的工作者，都会秉持八分原则，也就是允许二分的瑕疵存在。如果我们细心观察就会发现，我们周围那些忙碌不拖延的人，多半也都是机动灵活的，他们总是能以八十分就可以的态度完成十分艰难的工作。而完美主义者因为总是将精力放到过多的细小问题上，要么拖延不动手，要么放缓了行动的速度。要知道，我们若想在这个高压的现代社会更快乐、更轻松地生活，还是应该摒弃完美主义。\n\n### 金句摘录\n\n> 我们在做一件事时，完成远比完美更靠谱。\n\n> 他们总是能以八十分就可以的态度完成十分艰难的工作。\n\n---\n\n## 第 0080 集｜完成比完美更靠谱\n\n### 核心内容\n\n有一个富翁，因为实在太富有了，所以凡事都要求最好的。有一天，他喉咙发炎，这不过是一个小毛病，任何一位大夫都可以看得好。但是由于他求好心切，一定要找到一个最好的医生来为他诊治，他花费了无数的金钱，走遍了各地寻找医病高手。他一地一区地走，每个地方的人都告诉他当地有名医，但是他认为别的地方一定还有更好的医生，所以他又继续再找。直到有一天，他路过一个偏僻的小村庄，扁桃体早已经恶化成脓，病毒变得非常严重，必须马上开刀，否则性命难保，但是当地却没有一个医生。这个富有的人，居然因为一个小小的扁桃体发炎而一命呜呼。\n\n其实我们在工作中何尝不是如此呢？无关紧要的瑕疵并不会影响我们的表现，也不会给别人留下不好的印象，那又何必如此固执呢？完美主义者不仅对待工作吹毛求疵，对待生活也是如此，他们不但苛求自己，还苛求他人。有一个这样的笑话：一个人来到一家婚姻介绍所，进了大门以后，迎面又是两扇小门，一扇写着\"美丽的\"，另一扇写着\"不太美丽的\"。这个人推开\"美丽的\"门，迎面又是两扇门，一扇写着\"年轻的\"，另一扇写着\"不太年轻的\"。他推开\"年轻的\"门，这样一路走下去，先后推开九道门，当他来到最后一道门时，门上写着一行字：您追求的过于完美了，到天上去找吧。笑话当然是笑话，但说明了一个道理：真正十全十美的人是找不到的，我们不要过分地追求完美。\n\n的确，无论是工作还是生活中的烦恼，正是因为过分追求完美而产生的。如果我们苛求自己或别人把一件事做得完美无缺，那么我们将会失去很多东西。这个世界上本来就没有完美的东西，如果一味地追求，最后得到的反而是不美。总之，人生是没有完美可言的，完美只是在理想中存在，我们的工作和生活中总是有令人不满意的地方。事实上，追求完美的人是盲目的，因为完美是什么呢？是完全的美好，这可能吗？凡事无绝对，哪里来的完全，更不要提完美了。既然没有完美，那又为什么要去寻找它呢？\n\n### 金句摘录\n\n> 无关紧要的瑕疵并不会影响我们的表现，那又何必如此固执呢？\n\n> 人生是没有完美可言的，完美只是在理想中存在。\n\n---\n\n## 本篇小结\n\n本篇六集围绕完美主义这一拖延的重要根源展开。第 75–76 集先承认追求完美本是积极的态度，但越过限度就变成吹毛求疵：文员琴琴苛求细节反而办砸急件，而调整之道是从整理房间、安排进度表这些生活小事入手，培养严谨而有条理的习惯，减少拘泥于小事的时间。第 77–78 集给出行动准则：做事情的标准不是\"有没有意义\"，而是\"是不是最有意义\"；管理者应抓大放小而非亲力亲为，并用记录时间损耗、一次只做一件事、果断舍弃不必做的事三条方法，把时间留给真正重要的事。第 79–80 集则点出核心结论：完成比完美更靠谱，高效率工作者秉持八分原则、允许二分瑕疵，而那个为找\"最好的医生\"丢了性命的富翁故事警示我们，过分苛求完美，最后得到的反而是不美。摆脱完美主义的内耗，才能让行动跑赢拖延。\n","outline":[{"level":2,"text":"本篇速览","id":"本篇速览"},{"level":2,"text":"第 0075 集｜追求细枝末节上的完美只会耗费过多时间","id":"第-0075-集追求细枝末节上的完美只会耗费过多时间"},{"level":3,"text":"核心内容","id":"核心内容"},{"level":3,"text":"金句摘录","id":"金句摘录"},{"level":2,"text":"第 0076 集｜追求细枝末节上的完美只会耗费过多时间","id":"第-0076-集追求细枝末节上的完美只会耗费过多时间"},{"level":3,"text":"核心内容","id":"核心内容-2"},{"level":3,"text":"金句摘录","id":"金句摘录-2"},{"level":2,"text":"第 0077 集｜摒弃完美主义，抓大放小只做有意义的事","id":"第-0077-集摒弃完美主义抓大放小只做有意义的事"},{"level":3,"text":"核心内容","id":"核心内容-3"},{"level":3,"text":"金句摘录","id":"金句摘录-3"},{"level":2,"text":"第 0078 集｜摒弃完美主义，抓大放小只做有意义的事","id":"第-0078-集摒弃完美主义抓大放小只做有意义的事"},{"level":3,"text":"核心内容","id":"核心内容-4"},{"level":3,"text":"金句摘录","id":"金句摘录-4"},{"level":2,"text":"第 0079 集｜完成比完美更靠谱","id":"第-0079-集完成比完美更靠谱"},{"level":3,"text":"核心内容","id":"核心内容-5"},{"level":3,"text":"金句摘录","id":"金句摘录-5"},{"level":2,"text":"第 0080 集｜完成比完美更靠谱","id":"第-0080-集完成比完美更靠谱"},{"level":3,"text":"核心内容","id":"核心内容-6"},{"level":3,"text":"金句摘录","id":"金句摘录-6"},{"level":2,"text":"本篇小结","id":"本篇小结"}]},{"id":"T15","title":"第0081-0085集","full":"拖延心理学 · 第 81–85 集（快速决定，抢占先机）","lect":"","dur":"11:00","sec":660,"theme":"","url":"","md":"# 拖延心理学 · 第 81–85 集（快速决定，抢占先机）\n\n> **合集**：【有声书】拖延心理学停止内耗时间管理自律自控自制（B站 UP主：勤者读书）\n> **对应集数**：第 81–85 集（第81集_快速决定拖延会毁掉好的决策1 · 第82集_快速决定拖延会毁掉好的决策2 · 第83集_快速决定拖延会毁掉好的决策3 · 第84集_幸运总是降临在不拖延、抢占先机的人身上 · 第85集_幸运总是降临在不拖延、抢占先机的人身上）\n> **时长**：约 11 分钟\n> **本篇要点**：当机立断才有成功 · 果断不等于武断 · 每成一事先走半步\n\n---\n\n## 本篇速览\n\n| 集 | 标题 | 一句话要点 |\n| --- | --- | --- |\n| 0081 | 第81集_快速决定拖延会毁掉好的决策1 | 机遇转瞬即逝，王安博士因一只小麻雀记住了优柔寡断的教训 |\n| 0082 | 第82集_快速决定拖延会毁掉好的决策2 | 该出手时就出手，决策要果断但不能武断 |\n| 0083 | 第83集_快速决定拖延会毁掉好的决策3 | 企业国际化的果决启示：看准了就雷厉风行马上干 |\n| 0084 | 第84集_幸运总是降临在不拖延、抢占先机的人身上 | 海獭只有四分钟捕猎时间，时间就是生命的法则 |\n| 0085 | 第85集_幸运总是降临在不拖延、抢占先机的人身上 | 给成功定一个期限，聪明人抓机会，更聪明的人创造机会 |\n\n---\n\n## 第 0081 集｜快速决定拖延会毁掉好的决策\n\n### 核心内容\n\n机遇是随处可得的，这一点无论对于个人还是企业都是一样的。但机遇之所以称为机遇，还因为它是极少见的、转瞬即逝的。因此，如果你想抓住机遇，那么必须要有一个品质，那就是果断。只有当机立断、勇敢去行动，才有可能取得成功；如果一味犹豫不决、瞻前顾后、思前想后，等你下定决心的时候，就只能看别人的成功了。因此，再好的决策也经不起拖延。在做出一项正确的决策之前，速度是关键。无论你是一名普通职员，还是某些行业内的领跑者，都必须具有迅速做出正确决策的能力。思虑太多会阻碍你迅速做出决策，任何一项正确的决策都是当下做出来的。很多时候，我们都在浪费太多时间来预测未来，以致延误了做出决策的时机。\n\n书中讲了王安博士的故事。王安是华裔电脑名人，在他五岁的时候，发生过一件影响他一生的事。有一天，他外出玩耍，经过一棵大树的时候，突然有个鸟巢掉到他头上，从里面滚出了一只嗷嗷待哺的小麻雀。小孩的心是善良的，于是他决定把它带回去喂养，便连同鸟巢一起带回了家。走到家门口，忽然想起妈妈不允许他在家里养小动物，他轻轻地把小麻雀放在门口，然后急忙进屋去请求妈妈。在他的哀求下，妈妈破例答应了。王安兴奋地跑到门口，不料小麻雀已经不见了，却看见一只黑猫在意犹未尽地擦拭着嘴巴。王安为此事伤心了很久，从此他记住了一个很大的教训：只要是自己认定的事情，绝不可以优柔寡断。犹豫不决固然可以免去一些做错事的机会，但也失去了成功的机遇。正因为他记住了这个教训，王安在人生的道路上成就了一番大事业，成为了电脑界的华裔名人。虽然这只是一件小事，但它告诉我们：我们的一次迟疑，很可能就延误了行动的最佳时机。行动的天敌就是拖延，停止拖延的最好办法就是马上付诸行动。\n\n书中还提到：犹太人占全球的百分之一，但全球百分之七的财富掌握在他们手中，因为他们是行动的主人。犹太人做任何事都尽最大努力，从来不把今天的事留给明天；同时他们做事坚决果断，这是成功者最为重要的内在素质。\n\n### 金句摘录\n\n> 再好的决策也经不起拖延。\n\n> 犹豫不决固然可以免去一些做错事的机会，但也失去了成功的机遇。\n\n> 行动的天敌就是拖延，停止拖延的最好办法就是马上付诸行动。\n\n---\n\n## 第 0082 集｜快速决定拖延会毁掉好的决策\n\n### 核心内容\n\n不论要干什么，都要把握住适当的分寸和尺度。所谓该出手时就出手，一旦错过了最好的时机，你可能会一无所得。在两难的抉择中，敢于决断是一个人成功的关键。假如我们面对选择时犹豫不决，无法果断地做出决定，将会一事无成，甚至有可能还会埋下祸根，为自己带来一连串失败的打击。\n\n这就要求我们必须做到以下两点。第一，决策要果断。《论语·子路》里有句话叫\"言必信，行必果\"，意思是说，说话一定要守信用，做事一定要果断。要想果断，一个人必须要有明辨是非的能力，并能迅速分析情况，然后适时做出决定。诚然，果断要求的是速度，但绝不是武断。具有武断性的人往往懒于思考，而轻易做出决定；他们虽然也能快速做出决定，但往往欠缺周全的考虑，因此他们做出的决定大部分是主观的。第二，在抓住机会的同时也要迅速行动。要成功，除了要抓住机会，还要行动迅速。在机遇面前，千万不可犹豫，只有抓住机会，将构想赋予行动，才会有意义，才能领先对手、取得成功。\n\n这一集把\"果断\"的边界讲得很清楚：果断不等于武断，快要以明辨是非、迅速分析为前提；而抓住了机会还只是第一步，唯有把构想立刻变成行动，机会才真正属于你。\n\n### 金句摘录\n\n> 该出手时就出手，一旦错过了最好的时机，你可能会一无所得。\n\n> 果断要求的是速度，但绝不是武断。\n\n---\n\n## 第 0083 集｜快速决定拖延会毁掉好的决策\n\n### 核心内容\n\n这一集从企业的角度补充了快速决策的案例。2003 年年底，TCL 收购法国阿尔卡特的手机业务，率先吹响了全球规模的中国企业国际化号角；2004 年年底，联想又一举吞并了美国 IBM 公司的全球 PC 业务，进一步掀起了中国企业全球规模国际化高潮。国际化有渐进式的自我扩张型，也有跳跃式的局部规模化、飞鸟凌云式的全球规模化等路径。我们在做任何决策、包括实施决策的时候，都不可以优柔寡断、前怕狼后怕虎。决定的事就要勇敢地去做，只有抢先一步，才可能赢取先机、获得市场。\n\n当然，在这种两难中做出选择的勇气，必须以敏锐的洞察力为基础。如果没有经过思考、没有看清问题，就盲目地做出决断，不但无助于成功，相反却可能会使你损失惨重。要知道，没有经过慎重思考、盲目决定的勇气只是匹夫之勇。你若想成为一名非同凡响的角色，就必须学会在两难的选择中敢于决断、敢于行动。\n\n总之，每一个希望获得成功的人，都应该将自己训练成为一个果断的人。要做到这点，你就必须解放思想，具备超前的观念和敏锐的眼光，看准了的事应该雷厉风行、马上就干，不能患得患失、等待观望，更不能纸上谈兵、只说不干。\n\n### 金句摘录\n\n> 只有抢先一步，才可能赢取先机。\n\n> 没有经过慎重思考、盲目决定的勇气只是匹夫之勇。\n\n---\n\n## 第 0084 集｜幸运总是降临在不拖延、抢占先机的人身上\n\n### 核心内容\n\n我们都知道，在战场上，时间就是生命，错过一分钟，可能造成整个战役的失败，准时不拖延才是战役成功的前提。同样，在人生的战场上，幸运总是光临那些能够努力奋斗、抢占先机的人身上。无论做什么事情，速度问题不解决，是绝对不会成功的。速度法则不仅强调效率，更强调机遇。机遇是可遇不可求的，是最宝贵的资源：抓住了机遇就能取得胜利，错过了机遇，失败就在所难免。要抓住机遇，就要保证速度，机遇也是在速度中产生的。每成一事，要比别人先走半步。历史经验证明，能否做到快半步，往往决定一桩事情的成功或失败。竞争如同一棋一招，棋慢则步步落后，一招占先则步步主动，利于掌握全局。\n\n书中讲了一个海獭的故事。海獭属于鼬科动物，成年海獭体长 1.5 米，体重在 40 千克左右，它们生活在阿留申群岛周围的海域中，智能在某些方面超过了类人猿。然而令科学家惊叹的还不仅是海獭的聪明，而是它们对成功捕食时间的准确把握。海獭的潜水时间仅有 4 分钟，也就是说，在这 4 分钟里，它必须潜到 50 米以下的海里去捕猎，如果超过了 4 分钟，它就会溺死在水里。所以时间对于海獭来说就是生命，每一次捕猎都是以倒计时来计算的，并且必须用上整个生命。它们只能在规定的时间内捕获到食物，不然要么会被淹死，要么就会被饿死。海獭的食物大部分是海底生长的贝类、鲍鱼、海胆、螃蟹等。由于海獭非常清楚自己捕猎的时间有限，所以每次潜入水中之后，便目标明确地去寻找自己的猎物，一秒钟都不能耽误。它的速度也异常快捷，抓到猎物之后，一定要在肺里的氧气用完之前返回水面。它们没有鲨鱼那样坚硬的牙齿，也没有金枪鱼那样锋利的长枪，没有任何强过海里其他动物的器官或武器，也并不适合在水里生活，可是千百年来，它们就是靠着那四分钟的捕猎时间，在海里生存了下来。\n\n### 金句摘录\n\n> 幸运总是光临那些能够努力奋斗、抢占先机的人身上。\n\n> 能否做到快半步，往往决定一桩事情的成功或失败。\n\n---\n\n## 第 0085 集｜幸运总是降临在不拖延、抢占先机的人身上\n\n### 核心内容\n\n其实，人生的时间并不短。跟海獭相比，我们的时间何止一千个、一万个四分钟？不成功的原因，正是因为时间太过充裕，让人们有了懈怠的心理。如果给成功定一个期限，我们便没有时间怨天尤人，也没有机会犹豫不决，而是会立即在有限的时间里明确自己的目标，然后全力以赴。\n\n在同样的机会下，谁快谁就会赢得机会，谁快谁就会赢得财富；在机会不同的条件下，后来者要用速度赢得时间，赶上前面的领先者。比尔·盖茨说：你不要认为那些取得辉煌成就的人有什么过人之处，如果说他们与常人有什么不同之处，那就是当机会来到他们身边的时候，立即付诸行动，绝不迟疑，这就是他们的成功秘诀。\n\n现实生活中的一些机遇是要用心去发现的，如果忽视了这种机遇，可能就毫无意义了。而那些主动执行、善于创造机会的人，则能从最平淡无奇的生活中找到一丝微弱的机会，然后用自身的行动改变他们的处境。其实，机遇的出现虽然带有一定的偶然性，但又以必然性为基础。如果你有足够的勇气、敏锐的观察力和判断力，机遇就可以被创造出来。莎士比亚曾说：聪明人会抓住每一次机会，更聪明的人会不断创造新机会。这是说我们对待机会要选择主动的态度，甚至要用我们的行动增加机会出现的可能性。机遇无处不有、无处不在，关键是看你能否把握住它。机会只对那些勤奋工作的人才有意义，无论是过去、现在或是将来，最有希望的成功者并不是天才出众的人，而是那些既善于抓住机遇，又善于创造机遇的人。\n\n### 金句摘录\n\n> 如果给成功定一个期限，我们便没有时间怨天尤人，也没有机会犹豫不决。\n\n> 聪明人会抓住每一次机会，更聪明的人会不断创造新机会。\n\n---\n\n## 本篇小结\n\n本篇五集讲透了\"快速决定\"与\"抢占先机\"这对双生主题。第 81–83 集从个人到企业层层递进：王安博士童年的一只小麻雀让他铭记优柔寡断的代价，再好的决策也经不起拖延；而真正的果断要求明辨是非、迅速分析，绝不是懒于思考的武断，企业的国际化扩张同样证明了看准了就雷厉风行、绝不纸上谈兵的道理。第 84–85 集用海獭四分钟捕猎的生存法则作比：正因为我们的时间太过充裕，才滋生懈怠，给成功定一个期限，就没有时间怨天尤人。谁快谁赢得机会，快半步往往决定成败；比抓住机会更进一步的是创造机会，而机会只对勤奋工作的人才有意义。拖延毁掉的不只是时间，更是决策本身的价值。\n","outline":[{"level":2,"text":"本篇速览","id":"本篇速览"},{"level":2,"text":"第 0081 集｜快速决定拖延会毁掉好的决策","id":"第-0081-集快速决定拖延会毁掉好的决策"},{"level":3,"text":"核心内容","id":"核心内容"},{"level":3,"text":"金句摘录","id":"金句摘录"},{"level":2,"text":"第 0082 集｜快速决定拖延会毁掉好的决策","id":"第-0082-集快速决定拖延会毁掉好的决策"},{"level":3,"text":"核心内容","id":"核心内容-2"},{"level":3,"text":"金句摘录","id":"金句摘录-2"},{"level":2,"text":"第 0083 集｜快速决定拖延会毁掉好的决策","id":"第-0083-集快速决定拖延会毁掉好的决策"},{"level":3,"text":"核心内容","id":"核心内容-3"},{"level":3,"text":"金句摘录","id":"金句摘录-3"},{"level":2,"text":"第 0084 集｜幸运总是降临在不拖延、抢占先机的人身上","id":"第-0084-集幸运总是降临在不拖延抢占先机的人身上"},{"level":3,"text":"核心内容","id":"核心内容-4"},{"level":3,"text":"金句摘录","id":"金句摘录-4"},{"level":2,"text":"第 0085 集｜幸运总是降临在不拖延、抢占先机的人身上","id":"第-0085-集幸运总是降临在不拖延抢占先机的人身上"},{"level":3,"text":"核心内容","id":"核心内容-5"},{"level":3,"text":"金句摘录","id":"金句摘录-5"},{"level":2,"text":"本篇小结","id":"本篇小结"}]},{"id":"T16","title":"第0086-0089集","full":"拖延心理学 · 第 86–89 集（形成条理，目标明确）","lect":"","dur":"11:00","sec":660,"theme":"","url":"","md":"# 拖延心理学 · 第 86–89 集（形成条理，目标明确）\n\n> **合集**：【有声书】拖延心理学停止内耗时间管理自律自控自制（B站 UP主：勤者读书）\n> **对应集数**：第 86–89 集（第86集_形成条理，优先处理最重要的事 · 第87集_形成条理，优先处理最重要的事2 · 第88集_目标明确，不在瞎忙中浪费时间1 · 第89集_目标明确，不在瞎忙中浪费时间2）\n> **时长**：约 11 分钟\n> **本篇要点**：优先处理最重要的事 · 分清轻重缓急 · 目标明确才能有的放矢\n\n---\n\n## 本篇速览\n\n| 集 | 标题 | 一句话要点 |\n| --- | --- | --- |\n| 0086 | 第86集_形成条理，优先处理最重要的事 | 艾维·利一张纸条卖出25万美元，先做最重要的事 |\n| 0087 | 第87集_形成条理，优先处理最重要的事2 | 每天挑出最重要的三件事，按主次安排时间 |\n| 0088 | 第88集_目标明确，不在瞎忙中浪费时间1 | 猎骆驼的故事：目标确定的秘诀就是明确 |\n| 0089 | 第89集_目标明确，不在瞎忙中浪费时间2 | 制定计划不超能力范围，立即行动勤奋才有效率 |\n\n---\n\n## 第 0086 集｜形成条理，优先处理最重要的事\n\n### 核心内容\n\n现代社会，时间已成为一种有限的资源，所以人们似乎总觉得时间不够用，总是觉得效率不高。最重要的是，一些看来重要的事似乎总是被落下，这是为什么呢？其实这主要是因为人们总是把那些最重要的事情放到最后处理，而人的精力总是有限的。当我们工作一段时间后，势必会觉得疲乏，那些最重要的事也就无心处理了。因此，如果我们在做事之前，先静下心来厘清思绪、合理安排，列出事务处理的前后顺序，并且将重要的事情优先处理，那么事情往往会达到事半功倍的效果。\n\n我们先来看这样一个故事。这天，伯利恒钢铁公司总裁查理斯·舒瓦普会见效率专家艾维·利。见面不久，艾维·利就称他能够帮助舒瓦普把他的钢铁公司管理得更好。而舒瓦普却说自己很擅长管理——不过事实上他的管理确实不怎么令人满意。他告诉艾维·利，他已经不需要那些书本上的管理知识了，他需要的是实际行动，需要的是如何更好地执行计划。\n\n接下来，艾维·利说可以在 10 分钟内给舒瓦普一样东西，这东西能使他的公司业绩提高至少 50%。然后他递给舒瓦普一张空白纸，说：在这张纸上写下你明天要做的最重要的六件事。过了一会儿，又说：现在用数字标明每件事对于你和你的公司的重要性次序。这花了大概五分钟。他接着说：现在把这张纸放进口袋，明天早上第一件事情就是把这张纸条拿出来，做第一项。不要看其他的，只看第一。着手办第一项，直至完成为止，然后用同样的方法对待第二件事、第三件事，直到你下班为止。如果你只做完第一件事，那不要紧，你总是做着最重要的事情。艾维·利又说：记住，以后每天你都要这样做。如果你觉得这种方法奏效，那么请你的职员也这样做这个实验，你爱做多久就做多久，然后给我寄支票来，你认为值多少就给我多少。\n\n这场见面会才不到半个小时，但就在几个星期之后，效率专家艾维·利就收到了一张 25 万美元的支票，还有一封信。信上说，从钱的观点看，那是他一生中最有价值的一刻。后来有人说，五年之后，这个当年不为人知的小钢铁厂一跃成为世界上最大的独立钢铁厂，而其中艾维·利提出的方法功不可没，这个方法为舒瓦普赚得一亿美元。\n\n### 金句摘录\n\n> 如果你只做完第一件事，那不要紧，你总是做着最重要的事情。\n\n> 人的精力总是有限的，最重要的事要优先处理。\n\n---\n\n## 第 0087 集｜形成条理，优先处理最重要的事\n\n### 核心内容\n\n生活中，很多人都感到时间不够用，觉得自己太忙，但却总是把那些重要的事情一拖再拖，以至于总是忙不出头绪来。我们常常有这样的感触：除了工作，我们还需要生活、休息，还需要娱乐，我们要做的事情实在是太多了。单以工作为例，我们就有做不完的报表、开不完的会、见不完的客人。于是我们会选择做个时间计划表，时间被安排得满满当当，所有事务也都被安排进去，但实际上我们在执行的时候依然发现很难完成。这是为什么呢？因为这份计划表缺乏条理性。\n\n无论工作还是生活，都是要有章法的，不能眉毛胡子一把抓，要分清轻重缓急，这样才能一步一步地把事情做得有节奏、有条理，达到良好结果。法国哲学家布莱斯·帕斯卡（音）说：把什么放在第一位，是人们最难懂得的。那么我们该如何有计划地安排自己呢？每天开始都有一张优先表，把事情按先后顺序写下来；每天一早挑出最重要的三件事，当天一定要能够做完；而且每天这三件事里，最好有一件重要但是不紧急的，这样才能确保你没有成为集市的奴隶。\n\n把一天的事情安排好，这对于你成就大事是很关键的，这样你可以每时每刻集中精力处理要做的事。但把一周、一个月、一年的时间安排好，也是同样重要的，这样做给你一个整体方向，使你看到自己的宏图。真正的高效能人士都是明白轻重缓急的道理的，他们在处理一年或一个月、一天的事情之前，总是按主次的办法来安排自己的时间。\n\n### 金句摘录\n\n> 把什么放在第一位，是人们最难懂得的。\n\n> 每天这三件事里最好有一件重要但是不紧急的，这样才能确保你没有成为集市的奴隶。\n\n---\n\n## 第 0088 集｜目标明确，不在瞎忙中浪费时间\n\n### 核心内容\n\n在我们生活的周围，总是有不少人在抱怨时间不够用，你是否也有这样的感触呢？你的工作越来越忙了，你出席的会议更多了，你是否在办公桌上吃午饭？你甚至连假期都被占用了。当其他人提起\"事半功倍\"这个词时，你是否由衷地感到厌恶？那么，你忙出成果了吗？如果你的回答是否定的，那只能证明你是在瞎忙。你为什么那么忙？因为你的目标不明确。\n\n确实，任何一个忙碌中的人都希望能高效地做事，但要做到这一点，你首先应该明确自己到底该做什么。美国作家福斯迪克说得好：蒸汽或瓦斯只是在压缩状态下才能产生动力，尼亚加拉瀑布也要在拘留之后才能转化成电力，而生命唯有在专心一意、勤奋不懈时，才可获得成长。我们要做到勤奋和专心，就要有明确的目标和计划。\n\n每个人每天都拥有 24 个小时、86400 秒，时间分配给每个人都是公平的。然而这一天时间里，我们需要做的事情太多，所以我们必须要学会有的放矢，不盲目做事。那么，该怎样制定目标呢？我们先来看下面这个故事。一位父亲带着三个儿子到沙漠中去猎杀骆驼。到达目的地之后，父亲问大儿子：你看到了什么？大儿子回答：我看到了父亲、沙漠和骆驼。父亲又问二儿子：你看到了什么？二儿子回答：我看到了父亲、哥哥、弟弟、枪、沙漠和骆驼。父亲最后问三儿子：你看到了什么？三儿子回答：我看到了骆驼。父亲满意地回答：答对了。这则寓言说明，确定目标的秘诀就是明确。\n\n美国的一位心理学家曾经指出：如果一个铅球运动员在比赛的时候没有目标，那么他的成绩一定不会很好；如果他心中有一个奋斗目标，铅球就会朝着那个目标飞行，而且投掷的距离就会更远。这个比喻非常形象，它具体地说明了我们做事时目标的重要性。当我们有了一个追求的目标时，才会有不懈的努力，向心中既定的目标前进。\n\n### 金句摘录\n\n> 你为什么那么忙？因为你的目标不明确。\n\n> 确定目标的秘诀就是明确。\n\n---\n\n## 第 0089 集｜目标明确，不在瞎忙中浪费时间\n\n### 核心内容\n\n人生不能没有目标。如果没有目标，你就会像一只黑夜中找不到灯塔的航船，在茫茫大海中迷失了方向，只能随波逐流，达不到岸边，甚至会触礁而毁。我们强调做事要立即行动、绝不拖延，但这并不意味着我们可以盲目做事。事实上，如果在无目标下做事，会拖延更多的时间，因为我们需要花时间重新审视自己的行为和方法。在做任何一件事前，我们也必须做好计划——计划是为实现目标而需要采取的方法策略，只有目标没有计划，往往会顾此失彼，或多费精力和时间。我们只有树立明确的目标、制定详尽的计划，才能投入实际的行动，收获成功与满足。\n\n那么具体来说，我们该怎么做呢？第一，制定完善的计划和标准。要想把事情做到最好，你心中必须有一个很高的标准，不能是一般的标准。在决定事情之前要进行周密的调查论证，广泛征求意见，尽量把可能发生的情况考虑进去，以尽可能避免出现百分之一的漏洞，直至达到预期效果。第二，制定计划时，不要超过你的实际能力范围。比如你想学习外语，那么你不妨制定一个学习计划：安排星期一、星期三和星期五下午 5 点 30 分开始，听 20 分钟的西班牙语录音磁带；星期二和星期四学习语法。这样一来，你每个星期都能更接近实现你的目标。第三，做事要有条理、有秩序，不可急躁。急躁是很多人的通病，但任何一件事从计划到实现的阶段，总有一段所谓时机的存在，也就是需要一些时间让它自然成熟。如果过于急躁而不甘等待，经常会遭到破坏性的阻碍。因此，无论如何，我们都要有耐心，压抑那段焦急不安的情绪，才不愧是真正的智者。第四，立即行动，勤奋才能产生行动。我们都知道勤奋和效率的关系：在相同条件下，当一个人勤奋努力工作时，他所产生的效率肯定会大于他懒散时的工作状态。高效率的工作者都懂得这个道理，所以他们能够实现别人不能达到的目标。\n\n总之，在我们做事的过程中，若想克服拖延的习惯，就必须让自己的心有方向。也就是说，在下定破釜沉舟的决心前，我们还要有缜密的思维和计划。\n\n### 金句摘录\n\n> 如果没有目标，你就会像一只黑夜中找不到灯塔的航船。\n\n> 只有目标没有计划，往往会顾此失彼，或多费精力和时间。\n\n---\n\n## 本篇小结\n\n本篇四集把\"反拖延\"从心态层面推进到方法层面。第 86–87 集讲\"形成条理\"：艾维·利用一张写着六件事的纸条，让舒瓦普的钢铁厂脱胎换骨——方法的核心就是永远先做最重要的事；落实到日常，则是每天一张优先表，挑出最重要的三件事，并分清轻重缓急，把一周、一月、一年也纳入整体规划。第 88–89 集讲\"目标明确\"：瞎忙的根源是目标不明确，猎骆驼的寓言点出目标贵在聚焦；而有了目标还要有详尽计划、高标准、不超能力范围、不急躁，最后以立即行动和勤奋落地。目标指方向，条理定顺序，计划控节奏，行动出结果——四者环环相扣，正是把时间用在刀刃上、告别瞎忙与拖延的完整路径。\n","outline":[{"level":2,"text":"本篇速览","id":"本篇速览"},{"level":2,"text":"第 0086 集｜形成条理，优先处理最重要的事","id":"第-0086-集形成条理优先处理最重要的事"},{"level":3,"text":"核心内容","id":"核心内容"},{"level":3,"text":"金句摘录","id":"金句摘录"},{"level":2,"text":"第 0087 集｜形成条理，优先处理最重要的事","id":"第-0087-集形成条理优先处理最重要的事"},{"level":3,"text":"核心内容","id":"核心内容-2"},{"level":3,"text":"金句摘录","id":"金句摘录-2"},{"level":2,"text":"第 0088 集｜目标明确，不在瞎忙中浪费时间","id":"第-0088-集目标明确不在瞎忙中浪费时间"},{"level":3,"text":"核心内容","id":"核心内容-3"},{"level":3,"text":"金句摘录","id":"金句摘录-3"},{"level":2,"text":"第 0089 集｜目标明确，不在瞎忙中浪费时间","id":"第-0089-集目标明确不在瞎忙中浪费时间"},{"level":3,"text":"核心内容","id":"核心内容-4"},{"level":3,"text":"金句摘录","id":"金句摘录-4"},{"level":2,"text":"本篇小结","id":"本篇小结"}]}]},{"name":"进阶篇 · 目标与长期主义","items":[{"id":"T17","title":"第0090-0094集","full":"拖延心理学 · 第 90–94 集（按部就班，做好每个步骤）","lect":"","dur":"12:00","sec":720,"theme":"","url":"","md":"# 拖延心理学 · 第 90–94 集（按部就班，做好每个步骤）\n\n> **合集**：【有声书】拖延心理学停止内耗时间管理自律自控自制（B站 UP主：勤者读书）\n> **对应集数**：第 90–94 集（第90集_按部就班，做好每个步骤1 · 第91集_按部就班，做好每个步骤2 · 第92集_按部就班，做好每个步骤3 · 第93集_做好职业规划，目标明确才更有动力1 · 第94集_做好职业规划，目标明确才更有动力2）\n> **时长**：约 12 分钟\n> **本篇要点**：先定可实现的小目标 · 十一条按部就班的行动法 · 职业规划给人生定锚\n\n---\n\n## 本篇速览\n\n| 集 | 标题 | 一句话要点 |\n| --- | --- | --- |\n| 0090 | 第90集_按部就班，做好每个步骤1 | 200斤胖子的减肥计划：先设短小目标，步步为营 |\n| 0091 | 第91集_按部就班，做好每个步骤2 | 目标要具体可操作、务实、可分解，还要算清时间账 |\n| 0092 | 第92集_按部就班，做好每个步骤3 | 只管开始做、用15分钟启动、留意借口、奖赏进步 |\n| 0093 | 第93集_做好职业规划，目标明确才更有动力1 | 两年跳槽五次的小鹿：没有规划，经历再多也缺说服力 |\n| 0094 | 第94集_做好职业规划，目标明确才更有动力2 | 了解自己的能力与兴趣，长期短期目标协调一致 |\n\n---\n\n## 第 0090 集｜按部就班，做好每个步骤\n\n### 核心内容\n\n古人云：\"凡事预则立，不预则废。\"大到国家，小到个人，做事都必须要有计划性，只有做到缜密行事、步步为营，才能让成功多一份胜算。无论做什么事，也不要急于求成，毕竟做任何事情都不是一蹴而就的。我们在制定计划的时候，应当先设定一个短小的目标。当我们完成了这一阶段的目标以后，才有信心继续向更高阶段的目标挑战。一开始就将目标定得很高，我们很容易产生挫败感而减缓自己的行动。\n\n我们先来看一个减肥成功者是怎么养成运动习惯的。他自述道：我曾经是个 200 斤的胖子，肥胖带来的苦恼实在太多了。我常常买不到合适号码的衣服；我上公交车，大家都用异样的眼光看着我。而让我印象最深的一件事是：有一次我得了阑尾炎，疼得厉害，爸妈打了急救电话，来了几个年轻的女护士，她们要把我抬上救护车，但是我太胖了，女护士根本抬不动我，躺在担架上被折腾了好久。自打这件事以后，我告诉自己，无论如何一定要减肥，这样胖下去实在太苦恼了。我也明白，对于一个 200 斤的大胖子来说，立即变成一个苗条的人，并不可能。于是我给自己订立了一个运动减肥计划：第一个月的每天，我运动一个小时，每天不吃零食；第二个月，每天运动一个半小时。刚开始的几天，我觉得每天锻炼一个小时都非常吃力，因为我以前是个连走路都会大喘气的人。不过我还是坚持下来了。第一个月结束的时候，我去称了一下体重，居然减了 20 多斤，这实在是太神奇了。就这样，我继续完成了接下来两个月的锻炼计划，现在我身上的肥肉已经都不见了，而且最重要的是，我已经养成了锻炼身体的习惯。\n\n这个故事说明：面对再大的任务，也不要指望一步到位，先设一个够得着的小目标，按部就班地完成，才能积累信心、养成习惯，最终达成质的转变。\n\n### 金句摘录\n\n> 凡事预则立，不预则废。\n\n> 一开始就将目标定得很高，我们很容易产生挫败感而减缓自己的行动。\n\n---\n\n## 第 0091 集｜按部就班，做好每个步骤\n\n### 核心内容\n\n其实和锻炼身体一样，做任何事情都不可能一口气吃成一个胖子。我们可以先为自己定一个可以轻易实现的目标，这个目标的实现能增强我们的自信心，帮助我们克服更高的难题。具体来说，这需要我们做到以下几点。\n\n第一，树立的目标是可以操作的、具体的，而不是模糊的、抽象的。你不能告诉自己\"我要变得勤奋起来\"，而是要具体一点，比如说\"我要在九月一日之前打扫和整理我的车库\"。第二，树立的目标应该是务实的，而不是不切实际的。你要学会从小事开始养成习惯，而不要异想天开、过于理想化。比如，你不能告诉自己\"我绝不再拖拖拉拉\"，而应该把目标具体一些，如\"我会每天花一个小时的时间学习数学\"。第三，将你的目标分解成短小、具体的目标。每一个小目标都要比大目标容易达成，小目标可以积累成大目标。你不应该告诉自己\"我打算写份报告\"，而是说\"我今晚将花半个小时设计表格，明天我将花另外半小时把数据填进去，再接下来一天，我将根据那些数据花一个小时将报告写出来\"。第四，处理好时间问题。做事之前，先问问自己：这个任务将花去我多少时间？我真正能抽出多少时间投入其中？看看我什么时候可以开始做？上次那件事花的时间是否超出了我的预期？\n\n这一集给出的前四条方法有一个共同指向：把模糊而庞大的意愿，翻译成具体、务实、可分解、有时间预算的行动单元。目标越清晰具体，启动的阻力就越小，拖延的空间也就越小。\n\n### 金句摘录\n\n> 每一个小目标都要比大目标容易达成，小目标可以积累成大目标。\n\n> 学会从小事开始养成习惯，而不要异想天开、过于理想化。\n\n---\n\n## 第 0092 集｜按部就班，做好每个步骤\n\n### 核心内容\n\n这一集接着讲按部就班行动法的后几条。第五，只管开始做。要想一下子做完整件事情，每次只要迈出一小步，记住\"千里之行，始于足下\"。第六，利用接下来的 15 分钟。任何事情你都可以忍受 15 分钟，你只能通过一次又一次的 15 分钟，才能做完一件事情。因此，你在 15 分钟时间内所做的事情是相当有意义的，而不是想\"我只有 15 分钟时间了，何必费力去做呢\"。第七，为困难和挫折做好心理准备。当你遭遇到第一个或者第二个困难时，不要放弃。困难只不过是一个需要你去解决的问题，它不是你个人价值或能力的反应。而不是像\"教授不在办公室，所以我没法写论文了，去看场电影\"那样给自己找退路。第八，可能的话，将任务分派出去。你真的是能够做这件事的唯一人选吗？这件事情真的有必要去做吗？没有人可以什么事情都做，你也是。第九，保护你的时间，学会怎样说不。不要去做额外的或者不必要的事情，为了从事重要的事务，你可以决定对急迫的事情置之不理。第十，留意你的借口。不要习惯性地利用借口来拖延，而要将它看作是再做一个 15 分钟的一个信号，或者利用你的借口作为完成一个步骤之后的奖赏，而不是\"我累了\"\"我饿了，很烦躁，等我以后再做\"。第十一，奖赏你一路上的进步。如果你实现了初步的计划，那么你就应该奖赏自己。当然，你应该更关注自己的努力，而不是结果。\n\n在做事的过程中，一些人总是表现出急躁的毛病。任何一件事都是需要一些时间让它自然成熟的，如果我们想一步登天的话，那只会遭到破坏性的阻碍。因此，无论如何，我们都要有耐心，先为自己制定一个可实现的小目标吧。\n\n### 金句摘录\n\n> 千里之行，始于足下。\n\n> 任何事情你都可以忍受 15 分钟，你只能通过一次又一次的 15 分钟，才能做完一件事情。\n\n---\n\n## 第 0093 集｜做好职业规划，目标明确才更有动力\n\n### 核心内容\n\n任何人都有人生的目标，身为职场人士也应该有自己的职业目标，它是引领职业成功的关键。因为通过职业规划可以清楚地知道自己目前所在的位置，目前的职业与你的规划有怎样的偏差，它是否对你的职业生涯有帮助，你是否需要做出调整等等。最重要的是，任何一个有抱负的职场人绝不会允许自己有拖延的习惯。从这一点来看，我们也要为自己做好职业规划。\n\n小鹿已经是两年来第五次跳槽了。在这两年的时间里，他先后从事了性质不同的四份工作：民办学校的教师、教育机构的咨询员、办公器材的销售员、保险的推销员。这四份工作，只有做教师与他的专业对口，其他的都是在招聘单位急需用人、而他也急需工作的时候达成的。那时，单位不考虑他的专业，他也不考虑工作的性质，只看薪水和招聘单位的承诺——只要薪水满意，或者未来的薪水可以达到他的期望，他就做。就这样，他像走马灯似的换了 4 家单位、4 种工作。这一次，小鹿拿着他的中文简历找到了一个猎头，希望猎头能为他翻译成英文的简历。他说他看好了一家各方面都不错的外资企业，薪水尤其诱人，所以想制作一份英文简历试试运气。这位猎头一看这份简历，发现小鹿用的还是他大学毕业时的简历，只是在工作经历一栏多了几行字，也只有从工作经历里才能看出这不是一个应届毕业生。猎头摇了摇头。看到猎头的反应，小鹿其实也明白自己的工作经历没有什么说服力，所以在叙述工作经历的时候一笔带过，而且把自己的四次跳槽进行了排列组合，改成了两次。从小鹿工作的种类上来看，他所从事的职业无疑是丰富的，经历也是复杂的，但这种经历在质量上很难让人信服，实在是缺乏说服力。为什么会这样呢？因为他没有明确自己的职业目标，不知道自己要做什么、能做什么，最终导致了职业失去了方向。\n\n小鹿的经历说明，我们要掌握在职场的主动地位，最主要的就是要有一份职业规划。你需要明确制定未来三年、五年甚至十年、二十年的职业目标，给自己的职业生涯一个定位。这就是职业规划的作用，它使你能时刻感知自己的存在与方向。\n\n### 金句摘录\n\n> 任何一个有抱负的职场人绝不会允许自己有拖延的习惯。\n\n> 因为没有明确自己的职业目标，最终导致了职业失去了方向。\n\n---\n\n## 第 0094 集｜做好职业规划，目标明确才更有动力\n\n### 核心内容\n\n所谓的缺乏职业规划，就是指职场人士在步入职场之前，或者在职场中时，缺乏对自己能力和发展的明确认识，更没有认清自己所处的职场环境。很多职场人士往往处于这种\"不知己也不知彼\"的状态中：走一步算一步，不知道自己未来的走向如何，更不知道自己可以朝着哪个方向走。不少人连初始的职业选择都存在着困难，很多人不知道自己能干什么、适合干什么、喜欢干什么。其结果必然导致做了一份自己不愿意做的工作，或者是做了一份不适合自己做的工作。可以想见，这样只会逐步使你失去工作热情，工作散漫和拖延，前途肯定堪忧。\n\n那么怎样才算有一个职业规划呢？每个人都可以给自己的职业生涯进行规划，规划分长期目标和短期目标。长期目标是指自己到达某一个年龄阶段时想要达到的目标，而短期目标则是近期自己可以做到的程度，两种目标应该是协调一致的，具有可发展性。在制定目标之前，你首先要做的就是了解自己：一方面是了解自己的能力和特长，另一方面要了解自己的性格特点及兴趣爱好，看能否达到一个完美的结合。如果不能，那么应该偏向于哪个角度发展，就需要自己的理性选择了。\n\n为此你需要做到以下两点。首先，清楚地知道自己能做什么，这是基础。因为喜欢做的事情却未必有机会去做，或者说适合自己的事情未必有机会去做。比如通过职业倾向性测试，可以了解自己适合做什么行业，但现实却未必能给自己这个机会，所以自己的能力和特长才是进入职场的基础，也是和其他人竞争的实力所在。其次，了解自己的兴趣。至于自己喜欢做的事情，可以作为长远规划来处理。现代管理学之父彼得·德鲁克有一句话：\"我们大大高估了自己一年以后能做到的事，却大大低估了五年以后自己可以做到的事。\"因此，对于那些有跳槽想法的职场人来说，你不妨先问问自己：五年之后、十年之后、二十年之后，我的职业目标是什么？要达成这些目标，我还需要补充什么？意象中的那个职位究竟在哪些方面能够帮助我提升？了解这些，也许对你职场前景的转换更有帮助。\n\n### 金句摘录\n\n> 我们大大高估了自己一年以后能做到的事，却大大低估了五年以后自己可以做到的事。\n\n> 自己的能力和特长才是进入职场的基础，也是和其他人竞争的实力所在。\n\n---\n\n## 本篇小结\n\n本篇五集讲的是\"如何把目标变成一步一步走得完的路\"。第 90–92 集给出按部就班的方法体系：先设定短小可实现的目标，像那位 200 斤的减肥者一样逐月递进；再通过十一条细则把目标落成行动——具体可操作、务实、分解小目标、算清时间、只管开始做、用 15 分钟启动、为困难做好心理准备、学会分派任务、保护时间、留意借口、奖赏进步。第 93–94 集则把目光拉长到整个职业生涯：两年五次跳槽的小鹿因缺乏规划而使丰富的经历失去说服力，反衬出职业规划的价值；做好规划要先了解自己的能力特长与性格兴趣，让长期目标与短期目标协调一致。当每个步骤都清晰可见、每个目标都有时间表，拖延便失去了藏身之处，动力也随之而来。\n","outline":[{"level":2,"text":"本篇速览","id":"本篇速览"},{"level":2,"text":"第 0090 集｜按部就班，做好每个步骤","id":"第-0090-集按部就班做好每个步骤"},{"level":3,"text":"核心内容","id":"核心内容"},{"level":3,"text":"金句摘录","id":"金句摘录"},{"level":2,"text":"第 0091 集｜按部就班，做好每个步骤","id":"第-0091-集按部就班做好每个步骤"},{"level":3,"text":"核心内容","id":"核心内容-2"},{"level":3,"text":"金句摘录","id":"金句摘录-2"},{"level":2,"text":"第 0092 集｜按部就班，做好每个步骤","id":"第-0092-集按部就班做好每个步骤"},{"level":3,"text":"核心内容","id":"核心内容-3"},{"level":3,"text":"金句摘录","id":"金句摘录-3"},{"level":2,"text":"第 0093 集｜做好职业规划，目标明确才更有动力","id":"第-0093-集做好职业规划目标明确才更有动力"},{"level":3,"text":"核心内容","id":"核心内容-4"},{"level":3,"text":"金句摘录","id":"金句摘录-4"},{"level":2,"text":"第 0094 集｜做好职业规划，目标明确才更有动力","id":"第-0094-集做好职业规划目标明确才更有动力"},{"level":3,"text":"核心内容","id":"核心内容-5"},{"level":3,"text":"金句摘录","id":"金句摘录-5"},{"level":2,"text":"本篇小结","id":"本篇小结"}]},{"id":"T18","title":"第0095-0097集","full":"拖延心理学 · 第 95–97 集（审时度势，及时检查和修整你的目标）","lect":"","dur":"6:00","sec":360,"theme":"","url":"","md":"# 拖延心理学 · 第 95–97 集（审时度势，及时检查和修整你的目标）\n\n> **合集**：【有声书】拖延心理学停止内耗时间管理自律自控自制（B站 UP主：勤者读书）\n> **对应集数**：第 95–97 集（第95集_审时度势，及时检查和修整你的目标1 · 第96集_审时度势，及时检查和修整你的目标2 · 第97集_审时度势，及时检查和修整你的目标3）\n> **时长**：约 6 分钟\n> **本篇要点**：目标要实事求是 · 全面检查再定最优计划 · 细化目标及时调整\n\n---\n\n## 本篇速览\n\n| 集 | 标题 | 一句话要点 |\n| --- | --- | --- |\n| 0095 | 第95集_审时度势，及时检查和修整你的目标1 | 高三学生菲菲把目标从清华改为浙大：目标必须实事求是 |\n| 0096 | 第96集_审时度势，及时检查和修整你的目标2 | 洛克菲勒：全面检查一次，再决定哪一项计划最好 |\n| 0097 | 第97集_审时度势，及时检查和修整你的目标3 | 跟自己的过去比才是动力，细化目标便于及时调整 |\n\n---\n\n## 第 0095 集｜审时度势，及时检查和修整你的目标\n\n### 核心内容\n\n我们都知道，计划对于一个人的工作起着至关重要的作用，有了计划和目标，我们的行动才有指引。就连那些指挥作战的军事家，他们在战斗打响前，也都会制定几套作战方案；企业家在产品投放市场前，也会制定一系列的市场营销计划。我们学会制定计划，其意义是很大的，它是实现目标的必由之路。然而，计划是否完备、是否万无一失、是否在执行的过程中与原定目标逐渐偏离，还需要我们在做事的过程中经常检查。\n\n可能你曾有过这样的经历：上级领导交代给你一件任务，你为此做了精心的准备，制定好了实施方案。在整个执行的过程中，你一鼓作气，认为一切完美无瑕。而当你把工作成果交给领导时，却被领导批评说，这份成果已与原本的任务目标背道而驰。这就是为什么我们常常被上司、领导以及长辈教导，做事一定要带着脑子、一定要多思考、以防偏差的原因。\n\n我们先来看下面这个故事。菲菲是一名高三的学生，还有三个月她就要参加高考了。这天周末，姨妈来她家做客，菲菲陪姨妈聊天，话题很容易便转到菲菲高考这件事上。姨妈问菲菲：你想上什么大学呀？浙江大学，菲菲脱口而出。姨妈说：我记得你上高一的时候跟我说的是清华，那个时候你信誓旦旦说自己一定要考上，现在怎么降低标准了？菲菲，你这样可不行呀！菲菲回答：姨妈，咱得实际点。高一的时候树立一个远大的目标，是为了激励自己不断努力；但到了高三，我自己的实力如何我很清楚，我发现考清华已经不现实了。如果还是抱着当初的目标，那么我的自信心只会不断递减，哪里来的学习动力呢？您说是不是？姨妈说：你说的倒也对，制定任何目标都应该实事求是，而不应该好高骛远。看来我也不能给我们家孩子太大压力，让他自己决定上哪个学校吧。\n\n在这则案例中，菲菲的话很有道理。的确，任何计划和目标的制定，都应该根据自身的情况和时间段，不切实际的目标只会打击我们的自信心。\n\n### 金句摘录\n\n> 计划是否在执行的过程中与原定目标逐渐偏离，还需要我们在做事的过程中经常检查。\n\n> 制定任何目标都应该实事求是，而不应该好高骛远。\n\n---\n\n## 第 0096 集｜审时度势，及时检查和修整你的目标\n\n### 核心内容\n\n诚然，我们应该肯定目标的重要意义，但这并不代表我们应该固守目标一成不变。很多专家为那些求学的人提出建议：要不断调整自己的目标。也许你一直向往清华北大，一直想能排名第一，但是根据分析，如果这些科目曾经努力仍无法提高的话，就应该调整自己的目标。否则，不能实现的目标会使你失去信心，影响学习的效率。因此，有一个不切实际的目标，就等于没有目标。\n\n其实不仅是学习，在工作中，我们也要及时调整自己的计划。做事不能盲目，工作的第一步应该是明确自己的目标——有了目标才会有动力，有了动力才能够前进。但是，在总体目标下，我们可以适当调整自己的计划。这正如石油大王洛克菲勒所说的：\"全面检查一次，再决定哪一项计划最好。\"任何一个初入职场的年轻人都应该记住洛克菲勒的话：平时多做一手准备，多检查计划是否合理，就能减少一点失误，就会多一份把握。\n\n在做事的过程中，当我们有了目标，并能把自己的工作与目标不断地加以对照，进而清楚地知道自己的执行速度与目标之间的距离时，我们的做事成果就会得到维持和提高，自觉地克服一切困难，努力达到目标。也就是说，检查不是对计划的否定，而是让计划始终贴着现实走：对照目标看进度，发现偏差就修正，行动才能始终指向终点。\n\n### 金句摘录\n\n> 有一个不切实际的目标，就等于没有目标。\n\n> 全面检查一次，再决定哪一项计划最好。\n\n---\n\n## 第 0097 集｜审时度势，及时检查和修整你的目标\n\n### 核心内容\n\n的确，思维指导行动。如果计划不周全，那么就好比一个机器上的关键零件出了问题，那就意味着全盘皆输。一位名人说得好：生命的要务（音）不是超越他人，而是超越自己。所以我们一定要根据自己的实际情况制定目标——跟别人比是痛苦的根源，跟自己的过去比才是动力和快乐的源泉。这一点不光可以用在工作上，在以后的生活中都用得着，这对我们的一生将会产生积极的影响。\n\n另外，计划里总有不适宜的部分，对此我们需要及时调整。也就是说，当计划执行到一个阶段以后，你需要检查一下做事的效果，并对原计划中不适宜的地方进行调整。一个新的、更适合自己的计划，将会使今后的工作更加高效。因此，你可以把自己的目标细化：把大目标分成若干个小目标，把长期目标分成一个个阶段性目标，最后根据细化后的目标制定计划。另外，由于不同的工作有不同的特点，所以你还应根据手头任务制定细化的目标。细化目标也能帮助我们及时调整自己的目标。\n\n总之，我们应该根据自己的实际情况，制定一个通过自己的努力能够实现的目标；并且目标的制定不是一成不变的，要根据实际情况不断进行调整。经过一段时间的实践，你一定能够确定一个给自己带来源源不断动力的目标。这也是全书的收束：目标因时而修，行动因势而调，坚持检查与修整，动力便源源不断。\n\n### 金句摘录\n\n> 生命的要务不是超越他人，而是超越自己。\n\n> 跟别人比是痛苦的根源，跟自己的过去比才是动力和快乐的源泉。\n\n---\n\n## 本篇小结\n\n本篇三集是全书的收官，讲的是目标管理的最后一环——检查与修整。第 95 集指出，计划再精心也会在执行中偏离目标，必须经常回头检查；高三学生菲菲把目标从清华调整为浙大，说明目标要随自身实力与阶段实事求是地校准，不切实际的目标只会消磨自信。第 96 集引用洛克菲勒\"全面检查一次，再决定哪一项计划最好\"，强调在总体目标不变的前提下适当调整计划，把工作与目标不断对照，才能维持和提高做事成果。第 97 集进一步给出方法：跟自己的过去比而非跟别人比，把大目标细化为小目标与阶段性目标，计划执行到一个阶段就检查效果、及时修整。至此全书完成闭环：从认清拖延的根源，到克服借口与完美主义，再到勤奋行动、明确目标、按部就班——而审时度势、动态修整，正是让这一切持续运转下去的保障。\n","outline":[{"level":2,"text":"本篇速览","id":"本篇速览"},{"level":2,"text":"第 0095 集｜审时度势，及时检查和修整你的目标","id":"第-0095-集审时度势及时检查和修整你的目标"},{"level":3,"text":"核心内容","id":"核心内容"},{"level":3,"text":"金句摘录","id":"金句摘录"},{"level":2,"text":"第 0096 集｜审时度势，及时检查和修整你的目标","id":"第-0096-集审时度势及时检查和修整你的目标"},{"level":3,"text":"核心内容","id":"核心内容-2"},{"level":3,"text":"金句摘录","id":"金句摘录-2"},{"level":2,"text":"第 0097 集｜审时度势，及时检查和修整你的目标","id":"第-0097-集审时度势及时检查和修整你的目标"},{"level":3,"text":"核心内容","id":"核心内容-3"},{"level":3,"text":"金句摘录","id":"金句摘录-3"},{"level":2,"text":"本篇小结","id":"本篇小结"}]}]}]};</script>
+<script>/* ============================================================
+ * md.js — 轻量 Markdown 渲染器（零依赖 / 可离线）
+ * 支持：标题、表格、引用（含嵌套表格）、有序/无序列表（含嵌套）、
+ *       围栏代码块、分隔线、段落，以及行内 **粗体** *斜体* ~~删除~~
+ *       `代码` [链接](url) 裸链接 <br>（唯一放行的原始 HTML）
+ * ============================================================ */
+(function (global) {
+  'use strict';
+
+  var ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
+
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (c) { return ESC[c]; });
+  }
+
+  /* 中文（全角）字符之间拼接不加空格，避免出现"断 句 空 格" */
+  function isWide(ch) {
+    return /[\u2e80-\u9fff\u3000-\u303f\uff00-\uffef\u2018-\u201f\u2014\u2026]/.test(ch);
+  }
+  function smartJoin(a, b) {
+    if (!a) return b || '';
+    if (!b) return a;
+    return (isWide(a.slice(-1)) && isWide(b.charAt(0))) ? a + b : a + ' ' + b;
+  }
+
+  /* GitHub 风格锚点（与笔记内已有 TOC 链接保持一致） */
+  function slug(text) {
+    return String(text)
+      .toLowerCase()
+      .replace(/`+/g, '')
+      .replace(/\*\*|\*|~~/g, '')
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+      .replace(/[^\w\u4e00-\u9fff\s-]/g, '')
+      .replace(/^\s+|\s+$/g, '')
+      .replace(/\s+/g, '-');
+  }
+
+  /* ---------------- 行内 ---------------- */
+  function inline(text) {
+    var codes = [];
+    var t = String(text);
+
+    // 1) 先抽出行内代码，避免其中的符号被当语法
+    t = t.replace(/`([^`]+)`/g, function (m, a) {
+      codes.push(a);
+      return '\u0001C' + (codes.length - 1) + '\u0001';
+    });
+    // 2) 放行 <br>
+    t = t.replace(/<\s*br\s*\/?\s*>/gi, '\u0001B\u0001');
+    // 3) 转义
+    t = esc(t);
+    // 4) 链接
+    t = t.replace(/\[([^\]\n]*)\]\(([^)\s]+)\)/g, function (m, txt, href) {
+      var ext = /^https?:/i.test(href) ? ' target="_blank" rel="noopener"' : '';
+      return '<a href="' + href + '"' + ext + '>' + txt + '</a>';
+    });
+    // 5) 粗体 → 删除线 → 斜体
+    t = t.replace(/\*\*([^\n]+?)\*\*/g, '<strong>$1</strong>');
+    t = t.replace(/~~([^\n]+?)~~/g, '<del>$1</del>');
+    t = t.replace(/(^|[^*\w])\*([^\s*][^*\n]*?)\*(?!\*)/g, '$1<em>$2</em>');
+    // 6) 裸链接
+    t = t.replace(/(^|[\s(（])(https?:\/\/[^\s<>()（）]+)/g, function (m, p, u) {
+      return p + '<a href="' + u + '" target="_blank" rel="noopener">' + u + '</a>';
+    });
+    // 7) 还原
+    t = t.replace(/\u0001C(\d+)\u0001/g, function (m, idx) {
+      return '<code class="md-inline-code">' + esc(codes[+idx]) + '</code>';
+    });
+    t = t.replace(/\u0001B\u0001/g, '<br>');
+    return t;
+  }
+
+  /* ---------------- 行判定 ---------------- */
+  function headingOf(l) { return /^(#{1,6})\s+(.*?)\s*#*\s*$/.exec(l); }
+  function isFence(l) { return /^\s*(```+|~~~+)/.test(l); }
+  function isHr(l) { return /^\s*([-*_])(\s*\1){2,}\s*$/.test(l); }
+  function isQuote(l) { return /^\s{0,3}>/.test(l); }
+  function ulOf(l) { return /^(\s*)([-*+])\s+(.*)$/.exec(l); }
+  function olOf(l) { return /^(\s*)(\d+)[.)]\s+(.*)$/.exec(l); }
+  function indentOf(l, tab) {
+    var m = /^[ \t]*/.exec(l)[0];
+    return m.replace(/\t/g, tab || '    ').length;
+  }
+
+  function splitRow(l) {
+    var s = l.replace(/^\s+|\s+$/g, '');
+    if (s.charAt(0) === '|') s = s.slice(1);
+    if (s.slice(-1) === '|') s = s.slice(0, -1);
+    var cells = [], cur = '';
+    for (var i = 0; i < s.length; i++) {
+      var c = s.charAt(i);
+      if (c === '\\' && s.charAt(i + 1) === '|') { cur += '|'; i++; continue; }
+      if (c === '|') { cells.push(cur.replace(/^\s+|\s+$/g, '')); cur = ''; continue; }
+      cur += c;
+    }
+    cells.push(cur.replace(/^\s+|\s+$/g, ''));
+    return cells;
+  }
+
+  function isTableSep(l) {
+    if (typeof l !== 'string') return false;
+    var cells = splitRow(l);
+    if (cells.length < 1) return false;
+    if (cells.length < 2 && l.indexOf('|') < 0) return false;
+    for (var i = 0; i < cells.length; i++) {
+      if (!/^:?-{2,}:?$/.test(cells[i])) return false;
+    }
+    return true;
+  }
+
+  function alignOf(sep) {
+    var a = [];
+    var cells = splitRow(sep);
+    for (var i = 0; i < cells.length; i++) {
+      var c = cells[i];
+      if (/^:-+:$/.test(c)) a.push('center');
+      else if (/^-+:$/.test(c)) a.push('right');
+      else a.push(null);
+    }
+    return a;
+  }
+
+  /* ---------------- 列表 ---------------- */
+  function parseList(lines, start, n) {
+    var baseIndent = indentOf(lines[start]);
+    var firstIsUl = !!ulOf(lines[start]);
+    var tag = firstIsUl ? 'ul' : 'ol';
+    var startAttr = '';
+    if (!firstIsUl) {
+      var num = parseInt(olOf(lines[start])[2], 10);
+      if (num && num !== 1) startAttr = ' start="' + num + '"';
+    }
+    var i = start;
+    var html = '<' + tag + ' class="md-list"' + startAttr + '>';
+
+    while (i < n) {
+      var l = lines[i];
+      if (/^\s*$/.test(l)) {
+        var j = i;
+        while (j < n && /^\s*$/.test(lines[j])) j++;
+        var nx = lines[j];
+        if (nx === undefined) break;
+        if ((ulOf(nx) || olOf(nx)) && indentOf(nx) >= baseIndent) { i = j; continue; }
+        break;
+      }
+      var um = ulOf(l), om = olOf(l);
+      if (!um && !om) break;
+      if (indentOf(l) < baseIndent) break;
+      if (indentOf(l) > baseIndent) {           // 意外缩进：当同级处理
+        // 交给内层循环处理（此处直接放宽）
+      }
+      var text = um ? um[3] : om[3];
+      i++;
+      var item = inline(text);
+
+      var guard = 0;
+      while (i < n && guard++ < 500) {
+        if (/^\s*$/.test(lines[i])) {
+          var k = i;
+          while (k < n && /^\s*$/.test(lines[k])) k++;
+          if (k < n && (ulOf(lines[k]) || olOf(lines[k])) && indentOf(lines[k]) > baseIndent) { i = k; continue; }
+          break;
+        }
+        if (ulOf(lines[i]) || olOf(lines[i])) {
+          if (indentOf(lines[i]) > baseIndent) {
+            var sub = parseList(lines, i, n);
+            item += sub.html;
+            i = sub.next;
+            continue;
+          }
+          break;
+        }
+        if (headingOf(lines[i]) || isHr(lines[i]) || isFence(lines[i])) break;
+        if (indentOf(lines[i]) > baseIndent) {
+          item = smartJoin(item, inline(lines[i].replace(/^\s+|\s+$/g, '')));
+          i++;
+          continue;
+        }
+        break;
+      }
+      html += '<li class="md-li">' + item + '</li>';
+    }
+    html += '</' + tag + '>';
+    return { html: html, next: i };
+  }
+
+  /* ---------------- 主渲染 ----------------
+   * opts 可传：true（旧写法，等价于 {nested:true}）
+   *            { nested: true, idPrefix: 'p12-' }
+   * idPrefix 用于把多篇笔记合并进同一页面时避免标题 id 冲突。
+   */
+  function render(md, opts) {
+    var nested = false, idPrefix = '';
+    if (opts === true) nested = true;
+    else if (opts && typeof opts === 'object') {
+      nested = !!opts.nested;
+      idPrefix = opts.idPrefix || '';
+    }
+    var lines = String(md).replace(/\r\n?/g, '\n').split('\n');
+    var n = lines.length;
+    var out = [];
+    var outline = [];
+    var used = {};
+    var i = 0;
+
+    function uniq(base) {
+      base = base || 'sec';
+      if (!used[base]) { used[base] = 1; return base; }
+      used[base]++;
+      return base + '-' + used[base];
+    }
+
+    while (i < n) {
+      var line = lines[i];
+      if (/^\s*$/.test(line)) { i++; continue; }
+
+      /* 围栏代码块 */
+      var fm = /^\s*(```+|~~~+)\s*([\w+#-]*)\s*$/.exec(line);
+      if (fm) {
+        var tick = fm[1].charAt(0);
+        var closeRe = new RegExp('^\\s*' + tick + tick + tick);
+        var lang = fm[2];
+        var buf = [];
+        i++;
+        while (i < n && !closeRe.test(lines[i])) { buf.push(lines[i]); i++; }
+        if (i < n) i++;
+        out.push('<pre class="md-pre">' + (lang ? '<span class="md-pre-lang">' + esc(lang) + '</span>' : '') +
+          '<code>' + esc(buf.join('\n')) + '</code></pre>');
+        continue;
+      }
+
+      /* 分隔线 */
+      if (isHr(line)) { out.push('<hr class="md-hr">'); i++; continue; }
+
+      /* 标题 */
+      var hm = headingOf(line);
+      if (hm) {
+        var lvl = hm[1].length;
+        var raw = hm[2];
+        var id = idPrefix + uniq(slug(raw));
+        outline.push({
+          level: lvl,
+          text: raw.replace(/\*\*/g, '').replace(/`/g, '').replace(/~~/g, ''),
+          id: id
+        });
+        out.push('<h' + lvl + ' id="' + id + '" class="md-h md-h' + lvl + '">' + inline(raw) + '</h' + lvl + '>');
+        i++;
+        continue;
+      }
+
+      /* 引用块（内部可含表格/列表/标题） */
+      if (isQuote(line)) {
+        var qbuf = [];
+        while (i < n) {
+          if (isQuote(lines[i])) {
+            qbuf.push(lines[i].replace(/^\s{0,3}>\s?/, ''));
+            i++;
+          } else if (/^\s*$/.test(lines[i]) && isQuote(lines[i + 1] || '')) {
+            qbuf.push('');
+            i++;
+          } else break;
+        }
+        out.push('<blockquote class="md-quote">' + render(qbuf.join('\n'), { nested: true, idPrefix: idPrefix }).html + '</blockquote>');
+        continue;
+      }
+
+      /* 表格 */
+      if (line.indexOf('|') >= 0 && isTableSep(lines[i + 1])) {
+        var aligns = alignOf(lines[i + 1]);
+        var head = splitRow(line);
+        i += 2;
+        var rows = [];
+        while (i < n && !/^\s*$/.test(lines[i]) && lines[i].indexOf('|') >= 0) {
+          rows.push(splitRow(lines[i]));
+          i++;
+        }
+        var th = '';
+        for (var c = 0; c < head.length; c++) {
+          var st = aligns[c] ? ' style="text-align:' + aligns[c] + '"' : '';
+          th += '<th' + st + '>' + inline(head[c]) + '</th>';
+        }
+        var tb = '';
+        for (var r = 0; r < rows.length; r++) {
+          var tds = '';
+          for (var c2 = 0; c2 < head.length; c2++) {
+            var st2 = aligns[c2] ? ' style="text-align:' + aligns[c2] + '"' : '';
+            tds += '<td' + st2 + '>' + inline(rows[r][c2] === undefined ? '' : rows[r][c2]) + '</td>';
+          }
+          tb += '<tr>' + tds + '</tr>';
+        }
+        out.push('<div class="table-wrap"><table class="md-table"><thead><tr>' + th +
+          '</tr></thead><tbody>' + tb + '</tbody></table></div>');
+        continue;
+      }
+
+      /* 列表 */
+      if (ulOf(line) || olOf(line)) {
+        var res = parseList(lines, i, n);
+        out.push(res.html);
+        i = res.next;
+        continue;
+      }
+
+      /* 段落 */
+      var buf2 = [line];
+      i++;
+      while (i < n) {
+        var cur = lines[i];
+        if (/^\s*$/.test(cur)) break;
+        if (headingOf(cur) || isQuote(cur) || isFence(cur) || isHr(cur)) break;
+        if (ulOf(cur) || olOf(cur)) break;
+        if (cur.indexOf('|') >= 0 && isTableSep(lines[i + 1])) break;
+        buf2.push(cur);
+        i++;
+      }
+      var para = '';
+      for (var q = 0; q < buf2.length; q++) para = smartJoin(para, buf2[q].replace(/^\s+|\s+$/g, ''));
+      out.push('<p class="md-p">' + inline(para) + '</p>');
+    }
+
+    return { html: out.join('\n'), outline: nested ? [] : outline };
+  }
+
+  global.MDRender = {
+    render: render,
+    inline: inline,
+    slug: slug,
+    esc: esc
+  };
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+<script>/* ============================================================
+ * app.js — 知识库前端（零依赖 / 可离线）
+ * 侧栏章节目录 · 全文搜索 · 右侧大纲 · 阅读进度 · 明暗主题
+ * ============================================================ */
+(function () {
+  'use strict';
+
+  var KB = window.KB;
+  var NOTES = [];
+  var BY_ID = {};
+  KB.groups.forEach(function (g) {
+    g.items.forEach(function (n) {
+      n.group = g.name;
+      n._idx = NOTES.length;
+      NOTES.push(n);
+      BY_ID[n.id] = n;
+    });
+  });
+
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+
+  /* ---------------- 本地存储 ---------------- */
+  var LS_READ = 'pd_kb_read_v1', LS_LAST = 'pd_kb_last_v1', LS_THEME = 'pd_kb_theme_v1';
+  function readMap() { try { return JSON.parse(localStorage.getItem(LS_READ) || '{}'); } catch (e) { return {}; } }
+  function markRead(id) {
+    try { var m = readMap(); m[id] = 1; localStorage.setItem(LS_READ, JSON.stringify(m)); } catch (e) {}
+  }
+  function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+
+  /* ---------------- 通用：清理 Markdown ---------------- */
+  function cleanMd(s) {
+    s = String(s).replace(/^\s*\|/, '|');
+    if (s.indexOf('|') >= 0) s = s.replace(/\|/g, ' · ');
+    return s
+      .replace(/^\s*[>#*+\-—]{1,6}\s*/, '')
+      .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+      .replace(/<\/?br\s*\/?>/gi, ' ')
+      .replace(/\*\*|~~|`/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function highlightSnippet(text, terms) {
+    var out = esc(text);
+    terms.forEach(function (t) {
+      if (!t) return;
+      var re = new RegExp('(' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+      out = out.replace(re, '<mark class="hl">$1</mark>');
+    });
+    return out;
+  }
+
+  /* ================= 侧栏 ================= */
+  function buildSidebar() {
+    var nav = $('#nav');
+    var read = readMap();
+    var html = '';
+    KB.groups.forEach(function (g, gi) {
+      html += '<div class="grp" data-g="' + gi + '">' +
+        '<button class="grp-h" type="button"><span class="grp-n">' + esc(g.name) + '</span>' +
+        '<span class="grp-c">' + g.items.length + '</span><i class="chev"></i></button>' +
+        '<div class="grp-b">';
+      g.items.forEach(function (n) {
+        html += '<a class="item' + (read[n.id] ? ' is-read' : '') + '" data-id="' + n.id + '" href="#' + n.id + '" title="' +
+          esc(n.full || n.title) + '">' +
+          '<span class="pn">' + n.id + '</span>' +
+          '<span class="nm">' + esc(n.title) + '</span>' +
+          (n.dur ? '<span class="dm">' + n.dur + '</span>' : '') +
+          '</a>';
+      });
+      html += '</div></div>';
+    });
+    nav.innerHTML = html;
+
+    nav.addEventListener('click', function (e) {
+      var h = e.target.closest('.grp-h');
+      if (h) { h.parentNode.classList.toggle('closed'); return; }
+      var a = e.target.closest('.item');
+      if (a) { e.preventDefault(); open(a.getAttribute('data-id')); closeDrawer(); }
+    });
+    nav.addEventListener('contextmenu', function (e) {
+      var a = e.target.closest('.item');
+      if (a) { e.preventDefault(); a.classList.remove('is-read'); var m = readMap(); delete m[a.getAttribute('data-id')]; ls(LS_READ, JSON.stringify(m)); }
+    });
+  }
+
+  function syncSidebarActive(id) {
+    $$('#nav .item').forEach(function (a) { a.classList.toggle('active', a.getAttribute('data-id') === id); });
+    var cur = $('#nav .item.active');
+    if (cur) {
+      var grp = cur.closest('.grp');
+      if (grp) grp.classList.remove('closed');
+      var box = $('#sidebar'), cr = cur.getBoundingClientRect(), br = box.getBoundingClientRect();
+      if (cr.top < br.top + 60 || cr.bottom > br.bottom - 20) {
+        box.scrollTop += (cr.top - br.top) - box.clientHeight / 2 + 30;
+      }
+    }
+  }
+
+  /* ================= 内容渲染 ================= */
+  var currentId = null;
+  var renderedKey = null;   // 已渲染的 hash key，避免 hashchange 造成重复渲染
+
+  function collapseNativeToc(article) {
+    $$('h2', article).forEach(function (h) {
+      if (h.textContent.replace(/\s/g, '') !== '目录') return;
+      var box = document.createElement('div');
+      box.className = 'native-toc';
+      var n = h.nextElementSibling;
+      while (n && n.tagName !== 'H2') { var nx = n.nextElementSibling; box.appendChild(n); n = nx; }
+      if (!box.children.length) return;
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'toc-toggle';
+      var setLabel = function () { btn.innerHTML = '<i class="chev"></i>' + (box.hidden ? '本讲完整目录' : '收起完整目录'); };
+      box.hidden = true; setLabel();
+      btn.addEventListener('click', function () { box.hidden = !box.hidden; btn.classList.toggle('open', !box.hidden); setLabel(); });
+      h.after(btn);
+      btn.after(box);
+    });
+  }
+
+  function buildToc(note) {
+    var body = $('#tocbody');
+    var items = (note.outline || []).filter(function (o) { return o.level >= 2 && o.level <= 3; });
+    if (!items.length) { $('#toc').classList.add('empty'); body.innerHTML = ''; return; }
+    $('#toc').classList.remove('empty');
+    body.innerHTML = items.map(function (o) {
+      return '<a class="toc-i lv' + o.level + '" href="#' + o.id + '">' + esc(o.text) + '</a>';
+    }).join('');
+    body.parentNode.scrollTop = 0;
+  }
+
+  var tocHandler = null;
+  function bindTocScroll() {
+    if (tocHandler) window.removeEventListener('scroll', tocHandler);
+    var links = $$('#tocbody .toc-i');
+    if (!links.length) return;
+    var targets = links.map(function (a) { return document.getElementById(decodeURIComponent(a.getAttribute('href').slice(1))); });
+    tocHandler = function () {
+      var y = window.scrollY + 120, idx = -1;
+      for (var i = 0; i < targets.length; i++) {
+        if (targets[i] && targets[i].offsetTop <= y) idx = i; else if (targets[i]) break;
+      }
+      links.forEach(function (a, i) { a.classList.toggle('active', i === idx); });
+    };
+    window.addEventListener('scroll', tocHandler, { passive: true });
+    tocHandler();
+  }
+
+  function open(id, anchor, terms) {
+    var note = BY_ID[id];
+    if (!note) { renderHome(); return; }
+    currentId = id;
+    renderedKey = '#' + id + (anchor ? '/' + anchor : '');
+    if (location.hash !== renderedKey) location.hash = renderedKey;
+    $('#doc').innerHTML = '<div class="doc-inner"><div class="doc-head">' +
+      '<div class="dh-top"><span class="badge">' + note.id + '</span>' +
+      (note.lect ? '<span class="dh-lect">' + esc(note.lect) + '</span>' : '') +
+      (note.dur ? '<span class="dh-dur">时长 ' + note.dur + '</span>' : '') +
+      (note.url ? '<a class="dh-link" href="' + note.url + '" target="_blank" rel="noopener">原视频</a>' : '') +
+      '</div>' +
+      '<h1 class="dh-title">' + esc(note.full || note.title) + '</h1>' +
+      (note.theme ? '<p class="dh-theme">' + esc(note.theme) + '</p>' : '') +
+      '</div></div>';
+
+    var res = window.MDRender.render(note.md);
+    var art = $('.doc-inner');
+    var holder = document.createElement('div');
+    holder.className = 'md-body';
+    holder.innerHTML = res.html;
+    art.appendChild(holder);
+
+    // 去掉笔记自带的 H1（课程信息与标题已在头部统一展示）
+    $$('h1', holder).forEach(function (h) { h.remove(); });
+
+    // 表格横向滚动
+    $$('table', holder).forEach(function (t) {
+      if (!t.parentNode.classList.contains('table-wrap')) {
+        var w = document.createElement('div'); w.className = 'table-wrap';
+        t.parentNode.insertBefore(w, t); w.appendChild(t);
+      }
+    });
+
+    collapseNativeToc(holder);
+
+    // 内部的 #锚点 链接
+    holder.addEventListener('click', function (e) {
+      var a = e.target.closest('a[href^="#"]');
+      if (!a) return;
+      e.preventDefault();
+      var target = document.getElementById(decodeURIComponent(a.getAttribute('href').slice(1)));
+      if (target) window.scrollTo({ top: target.offsetTop - 84, behavior: 'smooth' });
+    });
+
+    buildToc(note);
+    bindTocScroll();
+    markRead(id);
+    var si = $('#nav .item[data-id="' + id + '"]');
+    if (si) si.classList.add('is-read');
+    syncSidebarActive(id);
+    ls(LS_LAST, id);
+    renderPager(note);
+    $('#toc').style.visibility = '';
+    document.body.classList.remove('is-home');
+    // 切换笔记时立即回到顶部（不要被全局 scroll-behavior:smooth 拖成长动画）
+    var de = document.documentElement;
+    de.style.scrollBehavior = 'auto';
+    window.scrollTo(0, 0);
+    requestAnimationFrame(function () { de.style.scrollBehavior = ''; });
+
+    if (terms && terms.length) {
+      var n = highlightIn(holder, terms);
+      if (n) {
+        var first = holder.querySelector('mark.hl');
+        if (first) setTimeout(function () { window.scrollTo({ top: Math.max(0, first.offsetTop - 120), behavior: 'smooth' }); }, 60);
+      }
+    } else if (anchor) {
+      var t = document.getElementById(decodeURIComponent(anchor));
+      if (t) setTimeout(function () { window.scrollTo({ top: t.offsetTop - 84, behavior: 'smooth' }); }, 30);
+    }
+    document.title = note.id + ' ' + note.title + ' · 判断推理知识库';
+  }
+
+  function highlightIn(root, terms) {
+    if (!terms || !terms.length) return 0;
+    var re = new RegExp('(' + terms.map(function (t) {
+      return t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }).join('|') + ')', 'gi');
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (node) {
+        if (!node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        var p = node.parentNode;
+        if (p && /^(SCRIPT|STYLE|MARK)$/.test(p.nodeName)) return NodeFilter.FILTER_REJECT;
+        re.lastIndex = 0;
+        return re.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      }
+    });
+    var nodes = [], n;
+    while ((n = walker.nextNode())) nodes.push(n);
+    var count = 0;
+    nodes.forEach(function (node) {
+      var frag = document.createDocumentFragment();
+      var parts = node.nodeValue.split(re);
+      parts.forEach(function (p, i) {
+        if (i % 2 === 1) { var m = document.createElement('mark'); m.className = 'hl'; m.textContent = p; frag.appendChild(m); count++; }
+        else if (p) frag.appendChild(document.createTextNode(p));
+      });
+      node.parentNode.replaceChild(frag, node);
+    });
+    return count;
+  }
+
+  function renderPager(note) {
+    var i = note._idx, p = NOTES[i - 1], n = NOTES[i + 1];
+    $('#pager').innerHTML =
+      (p ? '<a class="pg" href="#' + p.id + '" data-id="' + p.id + '"><span>上一讲</span><b>' + p.id + ' ' + esc(p.title) + '</b></a>' : '<span class="pg disabled"></span>') +
+      (n ? '<a class="pg next" href="#' + n.id + '" data-id="' + n.id + '"><span>下一讲</span><b>' + n.id + ' ' + esc(n.title) + '</b></a>' : '<span class="pg disabled"></span>');
+  }
+
+  /* ================= 首页 ================= */
+  function renderHome() {
+    currentId = null;
+    renderedKey = '';
+    document.body.classList.add('is-home');
+    $('#toc').style.visibility = 'hidden';
+    $('#pager').innerHTML = '';
+    $$('#nav .item').forEach(function (a) { a.classList.remove('active'); });
+    var h = Math.round(KB.meta.totalSec / 3600 * 10) / 10;
+    var last = ls(LS_LAST);
+    var read = readMap();
+    var readCount = NOTES.filter(function (n) { return read[n.id]; }).length;
+
+    var html = '<div class="doc-inner home">' +
+      '<div class="hero">' +
+      '<h1>' + esc(KB.meta.title) + '</h1>' +
+      '<p class="hero-sub">' + esc(KB.meta.subtitle || '') + (KB.meta.teacher ? ' · ' + esc(KB.meta.teacher) : '') + '</p>' +
+      '<div class="stats">' +
+      '<div class="stat"><b>' + KB.meta.totalEp + '</b><span>篇笔记</span></div>' +
+      '<div class="stat"><b>' + h + '</b><span>小时视频</span></div>' +
+      '<div class="stat"><b>' + KB.groups.length + '</b><span>个模块</span></div>' +
+      '<div class="stat"><b>' + readCount + '/' + KB.meta.totalEp + '</b><span>已读进度</span></div>' +
+      '</div>' +
+      (last && BY_ID[last] ? '<button class="btn primary" id="hContinue">继续上次：' + last + ' ' + esc(BY_ID[last].title) + '</button>' : '') +
+      (KB.meta.course ? '<p class="hero-src">笔记来源：' + esc(KB.meta.course) + '</p>' : '') +
+      '</div>' +
+      '<div class="kbd-tips"><b>快捷键</b> ' +
+      '<kbd>/</kbd><kbd>Ctrl</kbd>+<kbd>K</kbd> 搜索 &nbsp;·&nbsp; <kbd>Alt</kbd>+<kbd>←</kbd>/<kbd>→</kbd> 上一讲/下一讲 &nbsp;·&nbsp; <kbd>Esc</kbd> 关闭搜索 &nbsp;·&nbsp; 右键侧栏条目可取消已读</div>';
+
+    KB.groups.forEach(function (g, gi) {
+      var secs = g.items.reduce(function (a, b) { return a + b.sec; }, 0);
+      html += '<section class="ghome"><h2><i>' + String(gi + 1).padStart(2, '0') + '</i>' + esc(g.name.replace(/^\d+\s*·\s*/, '')) +
+        '<em>' + g.items.length + ' 讲 · ' + Math.round(secs / 60) + ' 分钟</em></h2><div class="chips">';
+      g.items.forEach(function (n) {
+        html += '<a class="chip' + (read[n.id] ? ' is-read' : '') + '" href="#' + n.id + '" data-id="' + n.id + '">' +
+          '<span class="cp">' + n.id + '</span>' + esc(n.title) + '<span class="cd">' + n.dur + '</span></a>';
+      });
+      html += '</div></section>';
+    });
+
+    var _howto = (KB.meta && KB.meta.howto) || [
+      ['按模块学：', '左侧目录按课程模块组织，和上课顺序一致，可整块顺读。'],
+      ['全文搜索：', '直接搜考点名或关键词（如「增速」「比重」「百分点」），会列出所有讲过的位置和原文片段。'],
+      ['查模板：', '每讲结尾都有「知识点总表 / 口诀与流程 / 易错点清单」，复习时只看这些表即可。'],
+      ['追进度：', '打开过的讲会自动标记为已读，右侧可取消。']
+    ];
+    html += '<section class="ghome"><h2><i>用</i>怎么用这个知识库</h2><ul class="howto">' +
+      _howto.map(function (it) {
+        var b = Array.isArray(it) ? it[0] : (it.b || ''), t = Array.isArray(it) ? it[1] : (it.text || '');
+        return '<li><b>' + esc(b) + '</b>' + esc(t) + '</li>';
+      }).join('') +
+      '</ul></section>';
+
+    html += '</div>';
+    $('#doc').innerHTML = html;
+    var cb = $('#hContinue');
+    if (cb) cb.addEventListener('click', function () { open(last); });
+    document.title = KB.meta.title;
+  }
+
+  /* ================= 搜索 ================= */
+  var idxReady = false;
+  function buildIndex() {
+    if (idxReady) return;
+    NOTES.forEach(function (n) {
+      n._lines = n.md.split('\n');
+      n._lc = n.md.toLowerCase();
+    });
+    idxReady = true;
+  }
+
+  function doSearch(q) {
+    buildIndex();
+    var terms = q.toLowerCase().split(/\s+/).filter(Boolean);
+    if (!terms.length) return [];
+    var res = [];
+    NOTES.forEach(function (n) {
+      var ok = true;
+      for (var i = 0; i < terms.length; i++) if (n._lc.indexOf(terms[i]) < 0) { ok = false; break; }
+      if (!ok) return;
+      var hits = [], total = 0;
+      for (var j = 0; j < n._lines.length; j++) {
+        var L = n._lines[j].toLowerCase(), best = 0;
+        for (var k = 0; k < terms.length; k++) if (L.indexOf(terms[k]) >= 0) best++;
+        if (best > 0) { total += best; hits.push({ line: j, text: cleanMd(n._lines[j]), score: best }); }
+      }
+      hits.sort(function (a, b) { return b.score - a.score; });
+      res.push({ note: n, score: total, hits: hits.slice(0, 4) });
+    });
+    res.sort(function (a, b) { return b.score - a.score || a.note._idx - b.note._idx; });
+    return res;
+  }
+
+  var searchSeq = 0;
+  function runSearch(q) {
+    var box = $('#results');
+    if (!q.trim()) { box.hidden = true; box.innerHTML = ''; return; }
+    var seq = ++searchSeq;
+    var res = doSearch(q);
+    if (seq !== searchSeq) return;
+    var terms = q.toLowerCase().split(/\s+/).filter(Boolean);
+    var maxLine = 86;
+    var html = '<div class="rs-head">找到 <b>' + res.length + '</b> 篇相关笔记（共 ' + NOTES.length + ' 篇）· <span class="rs-q">' + esc(q) + '</span><button class="rs-x" type="button">关闭 Esc</button></div>';
+    if (!res.length) {
+      html += '<div class="rs-empty">没有找到包含「' + esc(q) + '」的内容。试试更短的词，例如「他因」「秒杀」「两难」。</div>';
+    } else {
+      html += '<div class="rs-list">';
+      res.slice(0, 40).forEach(function (r) {
+        html += '<div class="rs-item"><a class="rs-title" href="#' + r.note.id + '" data-id="' + r.note.id + '">' +
+          '<span class="badge">' + r.note.id + '</span><b>' + esc(r.note.title) + '</b>' +
+          '<span class="rs-g">' + esc(r.note.group.replace(/^\d+\s*·\s*/, '')) + '</span>' +
+          '<span class="rs-c">' + r.score + ' 处</span></a>';
+        html += '<div class="rs-snips">';
+        r.hits.forEach(function (hh) {
+          var t = hh.text;
+          var pos = -1;
+          for (var k = 0; k < terms.length && pos < 0; k++) pos = t.toLowerCase().indexOf(terms[k]);
+          if (pos < 0) pos = 0;
+          var start = Math.max(0, pos - 30);
+          var snip = (start > 0 ? '…' : '') + t.slice(start, start + maxLine) + (t.length > start + maxLine ? '…' : '');
+          html += '<div class="rs-snip" data-id="' + r.note.id + '" data-line="' + hh.line + '">' + highlightSnippet(snip, terms) + '</div>';
+        });
+        html += '</div></div>';
+      });
+      html += '</div>';
+    }
+    box.innerHTML = html;
+    box.hidden = false;
+  }
+
+  function closeSearch() {
+    $('#results').hidden = true;
+    $('#q').value = '';
+  }
+
+  /* ================= 路由 ================= */
+  function route() {
+    var h = location.hash;
+    if (!h) { if (renderedKey !== '') renderHome(); return; }
+    if (h === renderedKey) return;
+    var seg = decodeURIComponent(h.slice(1)).split('/');
+    if (BY_ID[seg[0]]) open(seg[0], seg[1] || null);
+    else renderHome();
+  }
+
+  /* ================= 初始化 ================= */
+  function init() {
+    buildSidebar();
+    var bt = $('#brandTitle'), bs = $('#brandSub'), lg = $('.logo');
+    if (bt && KB.meta.title) bt.textContent = KB.meta.title;
+    if (lg && KB.meta.title) lg.textContent = KB.meta.title.replace(/[·・\s.].*$/, '').slice(0, 1);
+    if (bs && KB.meta.subtitle) bs.textContent = KB.meta.subtitle;
+    if (ls(LS_THEME) === 'dark') document.body.classList.add('dark');
+
+    $('#brand').addEventListener('click', function () { location.hash = ''; renderHome(); });
+
+    $('#btnHome').addEventListener('click', function () { location.hash = ''; renderHome(); });
+
+    $('#btnExpand').addEventListener('click', function () {
+      var any = $$('#nav .grp').some(function (g) { return g.classList.contains('closed'); });
+      $$('#nav .grp').forEach(function (g) { g.classList.toggle('closed', !any); });
+      $('#btnExpand').textContent = any ? '收起目录' : '展开目录';
+    });
+
+    $('#btnTheme').addEventListener('click', function () {
+      document.body.classList.toggle('dark');
+      ls(LS_THEME, document.body.classList.contains('dark') ? 'dark' : 'light');
+      $('#btnTheme').textContent = document.body.classList.contains('dark') ? '浅色' : '深色';
+    });
+    $('#btnTheme').textContent = document.body.classList.contains('dark') ? '浅色' : '深色';
+
+    $('#btnPrint').addEventListener('click', function () { window.print(); });
+
+    $('#btnMenu').addEventListener('click', function () { document.body.classList.toggle('drawer'); });
+
+    var q = $('#q'), timer = null;
+    q.addEventListener('input', function () {
+      clearTimeout(timer);
+      var v = q.value;
+      timer = setTimeout(function () { runSearch(v); }, 130);
+    });
+    q.addEventListener('focus', function () { if (q.value.trim()) runSearch(q.value); });
+
+    $('#qclear').addEventListener('click', function () { closeSearch(); q.focus(); });
+
+    $('#results').addEventListener('click', function (e) {
+      if (e.target.closest('.rs-x')) { closeSearch(); return; }
+      var t = e.target.closest('[data-id]');
+      if (!t) return;
+      var id = t.getAttribute('data-id');
+      var terms = $('#q').value.toLowerCase().split(/\s+/).filter(Boolean);
+      $('#results').hidden = true;
+      open(id, null, terms);
+    });
+
+    $('#pager').addEventListener('click', function (e) {
+      var a = e.target.closest('a[data-id]');
+      if (a) { e.preventDefault(); open(a.getAttribute('data-id')); }
+    });
+
+    $('#doc').addEventListener('click', function (e) {
+      var a = e.target.closest('a[href^="#"]');
+      if (!a || a.closest('#nav')) return;
+      var id = decodeURIComponent(a.getAttribute('href').slice(1)).split('/')[0];
+      if (BY_ID[id] && !document.getElementById(id)) { e.preventDefault(); open(id); }
+    });
+
+    document.addEventListener('keydown', function (e) {
+      var tag = (e.target.tagName || '').toLowerCase();
+      var typing = tag === 'input' || tag === 'textarea';
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); q.focus(); q.select(); return; }
+      if (e.key === '/' && !typing) { e.preventDefault(); q.focus(); return; }
+      if (e.key === 'Escape') { if (!$('#results').hidden) closeSearch(); else if (typing) q.blur(); return; }
+      if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && currentId) {
+        e.preventDefault();
+        var i = BY_ID[currentId]._idx + (e.key === 'ArrowRight' ? 1 : -1);
+        if (NOTES[i]) open(NOTES[i].id);
+      }
+    });
+
+    window.addEventListener('hashchange', route);
+    route();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+
+  function closeDrawer() { document.body.classList.remove('drawer'); }
+})();
+</script>
+</body>
+</html>
